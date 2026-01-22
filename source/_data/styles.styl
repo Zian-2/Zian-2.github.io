@@ -1,0 +1,284 @@
+/* 以下是所有关于文字和方框的修改 */
+
+/* 1.1 文章主体方框（首页和内页的文章背景） */
+.post-block {
+    background: rgba(255, 255, 255, 0.8) !important; /* 最后一位 0.8 是透明度 */
+    color: #333; /* 文字颜色 */
+    border-radius: 10px; /* 圆角 */
+}
+
+/* 1.2 侧边栏方框（头像、导航栏那一块） */
+.sidebar-inner {
+    background: rgba(255, 255, 255, 0.9) !important;
+    border-radius: 10px;
+}
+
+/* 1.3 顶部菜单栏背景 */
+.header-inner {
+    background: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* 1.4 评论区方框 */
+.comments {
+    background: rgba(255, 255, 255, 0.8) !important;
+}
+
+header.header {
+    background: rgba(255, 255, 255, 0.8) !important; /* 透明度 */
+    border-radius: 0 0 3px 3px; /* 底部圆角 */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05); /* 阴影 */
+    border: none !important;
+}
+
+a.menu-item-active {
+    background: #FFFFFF4D !important; /* 背景色，默认是黑的，你可以改成你喜欢的 */
+
+}
+
+div.site-brand-container {
+    background: rgba(255, 255, 255, 0.1) !important; /* 半透明背景 */
+    padding: 0px 0 !important;   /* 上下内边距 */
+}
+
+
+
+
+/* 这里的文字颜色 */
+div.site-meta .site-title {
+  font-family: 'Inter', 'Raleway', 'Helvetica Neue', Arial, sans-serif !important;
+  font-size: 1.1rem !important;      /* 调大字号 */
+  font-weight: 100 !important;      /* 极粗 */
+  letter-spacing: 5px !important;   /* 拉开字间距，这是高级感的来源 */
+  color: #777 !important;           /* 深色文字 */
+  text-transform: uppercase;         /* 全大写（可选） */
+  
+  /* 悬停效果 */
+  transition: all 0.3s ease;
+
+  border-left: 4px solid var(--theme-color); /* 左侧加一条主题色的竖线 */
+  padding-left: 15px !important;
+  line-height: 1;
+  font-family: monospace;
+}
+
+/* 2.1 标题颜色（首页文章列表标题） */
+.post-title-link {
+    color: #222 !important;
+}
+
+/* 2.2 正文文字颜色 */
+.post-body {
+    color: #444 !important;
+}
+
+/* 2.3 侧边栏菜单文字颜色 */
+.menu-item a {
+    color: #222 !important;
+}
+
+/* 2.4 文章元数据（日期、分类、标签等小字） */
+.post-meta {
+    color: #222 !important;
+}
+
+
+.post-block, .sidebar-inner, .header-inner {
+    border: none !important; /* 去掉原本死板的边框线 */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); /* 淡淡的投影 */
+}
+
+/* 针对顶部导航的额外修饰 */
+.menu {
+    margin-top: 20px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.3);
+
+}
+
+/* 当前活动页面的方块样式 */
+.menu-item-active a {
+    background: rgba(0, 123, 255, 0.1) !important; /* 淡淡的蓝色背景 */
+    color: #222 !important;                    /* 蓝色文字 */
+    border: 1px solid #222 !important;         /* 蓝色边框 */
+    font-weight: bold;
+}
+
+/* 文字 */
+
+/* 1. 博主名字 (Site Author) */
+.site-author-name {
+    color: #000000 !important; /* 改成你想要的颜色 */
+    font-weight: bold;
+}
+
+/* 2. 站点描述 (Site Description) */
+.site-description {
+    color: #007bff !important;
+}
+
+/* 3. 导航菜单文字 (Home, Tags, Archives...) */
+.menu-item a {
+    color: #222 !important;
+}
+
+/* 4. 导航菜单：鼠标悬停时的颜色 */
+.menu-item a:hover {
+    color: #007bff !important; /* 悬停变蓝色 */
+    background: rgba(0, 123, 255, 0.1) !important; /* 加个浅色背景 */
+}
+
+/* 5. 文章目录 (TOC) 文字颜色 */
+.post-toc ol {
+    color: #555 !important;
+}
+
+/* 6. 文章目录：当前阅读到的标题（高亮色） */
+.post-toc .active > a {
+    color: #ff4500 !important; 
+    border-bottom-color: #ff4500 !important;
+}
+
+/* 7. 侧边栏内的数字 (日志、分类、标签的数量) */
+.site-state-item-count {
+    color: #222 !important;
+}
+.site-state-item-name {
+    color: #999 !important;
+}
+
+/* 以上是所有关于文字和方框的修改 */
+
+
+
+// 1. 给文章块加上圆角和阴影，增加立体感
+.post-block {
+    margin-top: 20px;
+    margin-bottom: 20px;
+    padding: 40px;
+    background: rgba(255, 255, 255, 0.9); // 半透明白
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+// 2. 侧边栏个人信息框也变圆
+.sidebar-inner {
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+// 3. 全局背景图（让你博客不再是一片死白）
+body {
+    background: url(/images/background.mp4); // 随机精美壁纸
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-size: cover;
+}
+
+// 1. 定义全局主题色（你可以把 #007bff 换成你喜欢的任何颜色，比如绿 #28a745）
+:root {
+    --theme-color: #007bff; 
+}
+
+
+
+// 3. 让内容区域变成“毛玻璃”半透明质感
+.post-block, .sidebar-inner, .header-inner, .comments {
+    background: rgba(255, 255, 255, 0.85) !important; // 0.85 是透明度
+    backdrop-filter: blur(10px); // 毛玻璃模糊效果，非常高级
+
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+// 4. 标题颜色跟随主题色
+.post-title-link {
+    color: #333 !important;
+}
+.post-title-link:hover {
+    color: var(--theme-color) !important;
+}
+
+// 5. 菜单栏选中的小圆点/下划线颜色
+.menu-item-active a, .menu-item a:hover {
+    background: rgba(0, 123, 255, 0.1);
+    color: var(--theme-color) !important;
+    border-radius: 8px;
+}
+
+/* 默认状态：半透明 */
+#live2dcanvas, #live2d-widget {
+    opacity: 0.8 !important;
+    transition: opacity 0.3s ease-in-out !important;
+    cursor: pointer; /* 顺便加个手型，提醒用户这玩意能互动 */
+}
+
+/* 鼠标悬停状态：恢复不透明 */
+#live2dcanvas:hover, #live2d-widget:hover {
+    opacity: 1 !important;
+}
+
+/* 针对部分版本可能使用的容器 ID */
+#live2d-widget {
+    opacity: 0.5;
+    transition: opacity 0.3s;
+}
+#live2d-widget:hover {
+    opacity: 1;
+}
+
+
+
+/* 调整背景视频 */
+
+#custom-bg-video {
+  /* 1. 把它从页面排版中抽离出来，固定在视口 */
+  position: fixed;
+  top: 0;
+  left: 0;
+  
+  /* 2. 铺满全屏，不随页面滚动而消失 */
+  width: 100vw;
+  height: 100vh;
+  
+  /* 3. 核心：必须是负数，才能躲在所有文字和方框后面 */
+  z-index: -1; 
+  
+
+}
+
+
+
+/*放大背景图片使其填充整个屏幕*/
+
+#custom-bg-video {
+  /* ... 之前的 position: fixed; 等 ... */
+  
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+
+  /* 核心修复：放大 5%，并结合位移 */
+  transform: scale(1.05); 
+  
+  /* 配合之前你想做的左右挪动 */
+  /* 因为放大了，现在的挪动范围更安全，不会露白 */
+  object-position: 80% 50% !important;
+}
+
+/*删除条带*/
+/*
+.headband {
+  display: none !important;
+}
+*/
+
+.headband {
+  /* 调整为：深森林绿 -> 宝石绿 -> 深森林绿 */
+  /* #0d4d3a 相比之前的 093028 稍微提亮了一点饱和度 */
+  /* #27ae60 是经典的宝石绿，能提供更好的视觉焦点 */
+  background: linear-gradient(to right, #0d4d3a, #27ae60, #0d4d3a) !important;
+  
+  height: 4px !important;
+  
+  /* 增加一个非常细微的绿色外发光，让它看起来更清透 */
+  box-shadow: 0 0 5px rgba(39, 174, 96, 0.3);
+}
+
