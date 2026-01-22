@@ -24,20 +24,20 @@
 
     <meta property="og:type" content="website">
 <meta property="og:title" content="Homepage">
-<meta property="og:url" content="http://example.com/index.html">
+<meta property="og:url" content="http://example.com/categories/%E6%95%B0%E5%AD%A6/index.html">
 <meta property="og:site_name" content="Homepage">
 <meta property="og:locale" content="en_US">
 <meta property="article:author" content="Zian Wang">
 <meta name="twitter:card" content="summary">
 
 
-<link rel="canonical" href="http://example.com/">
+<link rel="canonical" href="http://example.com/categories/%E6%95%B0%E5%AD%A6/">
 
 
-<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":true,"isPost":false,"lang":"en","comments":"","permalink":"","path":"index.html","title":""}</script>
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":false,"lang":"en","comments":"","permalink":"","path":"categories/数学/index.html","title":""}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
-<title>Homepage</title>
+<title>Category: 数学 | Homepage</title>
   
 
 
@@ -118,7 +118,7 @@
 
     <a href="/" class="brand" rel="start">
       <i class="logo-line"></i>
-      <h1 class="site-title">Homepage</h1>
+      <p class="site-title">Homepage</p>
       <i class="logo-line"></i>
     </a>
   </div>
@@ -239,117 +239,50 @@
 
     </div>
 
-    <div class="main-inner index posts-expand">
-
-    
+    <div class="main-inner category posts-collapse">
 
 
-<div class="post-block">
   
   
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2026/01/21/%E7%9F%A9%E9%98%B5%E6%B1%82%E5%AF%BC/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.jpg">
-      <meta itemprop="name" content="Zian Wang">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Homepage">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content=" | Homepage">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2026/01/21/%E7%9F%A9%E9%98%B5%E6%B1%82%E5%AF%BC/" class="post-title-link" itemprop="url">矩阵求导理论：几种表示</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">Posted on</span>
-
-      <time title="Created: 2026-01-21 22:15:15" itemprop="dateCreated datePublished" datetime="2026-01-21T22:15:15+08:00">2026-01-21</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">Edited on</span>
-      <time title="Modified: 2026-01-22 21:52:35" itemprop="dateModified" datetime="2026-01-22T21:52:35+08:00">2026-01-22</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">In</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/%E6%95%B0%E5%AD%A6/" itemprop="url" rel="index"><span itemprop="name">数学</span></a>
-        </span>
-    </span>
-
   
-</div>
+  <div class="post-block">
+    <div class="post-content">
+      <div class="collection-title">
+        <h1 class="collection-header">数学
+          <small>Category</small>
+        </h1>
+      </div>
 
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <p><strong>提示：如果latex矩阵的渲染有问题，刷新往往能解决问题</strong><br><br></p>
-<p>也许我们可以说，张量就是矩阵，梯度就是导数，张量的梯度本质上就是矩阵求导的ml小黑话说法。然而由于一些众所周知的原因，很多人甚至在学习线性代数之前就已经走进了深度学习，初次面对高维张量的求导往往感到混乱。而市面上如The Matrix Cookbook等的工具书又往往太细节，翻译也不尽如人意。本文将以最基础的多元 Logistic 回归（Multinomial Logistic Regression）为例，从大方向上探讨三种不同的推导范式。</p>
-<h3 id="例子背景"><a href="#例子背景" class="headerlink" title="例子背景"></a>例子背景</h3><p>我们设定一个典型的分类场景：</p>
-<ul>
-<li><p><strong>输入向量</strong>：$\mathbf{x} \in \mathbb{R}^{n \times 1}$。</p>
-</li>
-<li><p><strong>权重矩阵</strong>：$W \in \mathbb{R}^{m \times n}$。</p>
-</li>
-<li><p><strong>线性输出</strong>：$\mathbf{a} = W\mathbf{x} \in \mathbb{R}^{m \times 1}$。</p>
-</li>
-<li><p><strong>预测概率</strong>：$\mathbf{p} = \text{softmax}(\mathbf{a}) \in \mathbb{R}^{m \times 1}$，其中第 $i$ 个分量 $p_i = \frac{\exp(a_i)}{\sum_{j=1}^m \exp(a_j)}$。</p>
-</li>
-<li><p><strong>目标标签</strong>：$\mathbf{y} \in \mathbb{R}^{m \times 1}$，是一个 One-hot 向量（仅有一个元素为 1，其余为 0）。</p>
-</li>
-<li><p><strong>损失函数</strong>：标量 $l = -\mathbf{y}^\top \log \mathbf{p} = -\sum_{k=1}^m y_k \ln p_k$。</p>
-</li>
-</ul>
-<p>我们的目标是求出梯度矩阵 $\nabla_W l$（即 $\frac{\partial l}{\partial W}$）。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2026/01/21/%E7%9F%A9%E9%98%B5%E6%B1%82%E5%AF%BC/#more" rel="contents">
-                Read more &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
       
+    <div class="collection-year">
+      <span class="collection-header">2026</span>
     </div>
 
-    
-    
-    
+  <article itemscope itemtype="http://schema.org/Article">
+    <header class="post-header">
+      <div class="post-meta-container">
+        <time itemprop="dateCreated"
+              datetime="2026-01-21T22:15:15+08:00"
+              content="2026-01-21">
+          01-21
+        </time>
+      </div>
 
-    <footer class="post-footer">
-        <div class="post-eof"></div>
+      <div class="post-title">
+          <a class="post-title-link" href="/2026/01/21/%E7%9F%A9%E9%98%B5%E6%B1%82%E5%AF%BC/" itemprop="url">
+            <span itemprop="name">矩阵求导理论：几种表示</span>
+          </a>
+      </div>
+
       
-    </footer>
+    </header>
   </article>
-</div>
 
-
-
-
+    </div>
+  </div>
+  
+  
+  
 
 </div>
   </main>

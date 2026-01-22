@@ -1385,7 +1385,7 @@ pre code {
     vertical-align: middle;
   }
   .links-of-author a::before {
-    background: #165e9e;
+    background: #fff620;
     display: inline-block;
     margin-right: 3px;
     transform: translateY(-2px);
@@ -3411,4 +3411,43 @@ a.category-list-link {
 /* 确保这一行还在，它能封住因为 margin 变动可能重新露出的接缝 */
   position: relative;
   top: -1px;
+}
+/* =========================================================
+   7. 正文内容区域 (Post Body) 字体与排版
+   ========================================================= */
+.post-body {
+/* 1. 字体大小：推荐 16px 或 1.05rem，既能看清公式也不至于太拥挤 */
+  font-size: 14px !important;
+/* 2. 字体选择：优先使用无衬线字体提高屏幕阅读舒适度 */
+  font-family: 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif !important;
+/* 3. 文字颜色：#444 或 #333 比较护眼，不要用纯黑 #000 */
+  color: #444 !important;
+/* 4. 行间距：这是呼吸感的来源，推荐 1.6 到 1.8 */
+  line-height: 1.7 !important;
+/* 5. 字间距：微调增加高级感 */
+  letter-spacing: 0.5px !important;
+/* 6. 段落间距：让文章不显得拥挤 */
+}
+.post-body p {
+  margin-bottom: 20px !important;
+}
+/* =========================================================
+   table of contents与overview
+   ========================================================= */
+/* 1. 强制所有未选中的标签为黑色 */
+.sidebar-nav li {
+  color: #777;
+  border-bottom: 2px solid transparent;
+}
+/* 2. 核心：点击跳转后，处于“激活状态”的标签（这就是你要的选中） */
+/* 我们直接针对 li 及其内部所有可能影响颜色的文字进行穿透覆盖 */
+.sidebar-nav .sidebar-nav-active,
+.sidebar-nav .sidebar-nav-active span,
+.sidebar-nav .sidebar-nav-active:hover {
+  color: #fc6423 !important;
+  border-bottom: 2px solid #fc6423 !important; /* 增加橘色下划线确认感 */
+}
+/* 3. 鼠标悬停时也给个橘色反馈 */
+.sidebar-nav li:hover {
+  color: #fc6423 !important;
 }
