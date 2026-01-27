@@ -30,7 +30,7 @@
 <meta property="og:description" content="提示：如果latex矩阵的渲染有问题，刷新往往能解决问题 也许我们可以说，张量就是矩阵，梯度就是导数，张量的梯度本质上就是矩阵求导的ml小黑话说法。然而由于一些众所周知的原因，很多人甚至在学习线性代数之前就已经走进了深度学习，初次面对高维张量的求导往往感到混乱。而市面上如The Matrix Cookbook等的工具书又往往太细节，翻译也不尽如人意。本文将以最基础的多元 Logistic 回归（M">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2026-01-21T14:15:15.000Z">
-<meta property="article:modified_time" content="2026-01-22T13:52:35.121Z">
+<meta property="article:modified_time" content="2026-01-24T10:49:15.748Z">
 <meta property="article:author" content="Zian Wang">
 <meta property="article:tag" content="数学">
 <meta property="article:tag" content="矩阵理论">
@@ -192,7 +192,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BE%8B%E5%AD%90%E8%83%8C%E6%99%AF"><span class="nav-number">1.</span> <span class="nav-text">例子背景</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%B9%E6%B3%95%E4%B8%80%EF%BC%9A%E9%80%90%E9%A1%B9%E6%B1%82%E5%AF%BC"><span class="nav-number">2.</span> <span class="nav-text">方法一：逐项求导</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E9%93%BE%E5%BC%8F%E6%B3%95%E5%88%99"><span class="nav-number">2.1.</span> <span class="nav-text">1. 链式法则</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E7%AC%AC%E4%B8%80%E9%98%B6%E6%AE%B5%EF%BC%9A%E5%9F%BA%E7%A1%80%E9%A1%B9%E6%B1%82%E5%AF%BC"><span class="nav-number">2.2.</span> <span class="nav-text">2. 第一阶段：基础项求导</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-%E7%AC%AC%E4%BA%8C%E9%98%B6%E6%AE%B5%EF%BC%9ASoftmax-%E6%A2%AF%E5%BA%A6%E7%9A%84%E5%88%86%E7%B1%BB%E8%AE%A8%E8%AE%BA"><span class="nav-number">2.3.</span> <span class="nav-text">3. 第二阶段：Softmax 梯度的分类讨论</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-%E7%AC%AC%E4%B8%89%E9%98%B6%E6%AE%B5%EF%BC%9A%E7%BB%84%E5%90%88%E6%B1%82%E5%92%8C"><span class="nav-number">2.4.</span> <span class="nav-text">4. 第三阶段：组合求和</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-%E8%BF%98%E5%8E%9F%E4%B8%BA%E7%9F%A9%E9%98%B5%E5%BD%A2%E5%BC%8F"><span class="nav-number">2.5.</span> <span class="nav-text">5. 还原为矩阵形式</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%B9%E6%B3%95%E4%BA%8C%EF%BC%9A%E5%88%A9%E7%94%A8%E5%85%A8%E5%BE%AE%E5%88%86"><span class="nav-number">3.</span> <span class="nav-text">方法二：利用全微分</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E6%95%B4%E4%BD%93%E6%B5%81%E7%A8%8B"><span class="nav-number">3.1.</span> <span class="nav-text">1. 整体流程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E7%9F%A9%E9%98%B5%E5%BE%AE%E5%88%86%E7%9A%84%E8%BF%90%E7%AE%97%E6%B3%95%E5%88%99%E4%B8%8ETrace-trick"><span class="nav-number">3.2.</span> <span class="nav-text">2. 矩阵微分的运算法则与Trace trick</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-%E5%A4%9A%E5%85%83-Logistic-%E7%9A%84%E6%A2%AF%E5%BA%A6"><span class="nav-number">3.3.</span> <span class="nav-text">3. 多元 Logistic 的梯度</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%B9%E6%B3%95%E4%B8%89%EF%BC%9AJacobian-%E7%9F%A9%E9%98%B5"><span class="nav-number">4.</span> <span class="nav-text">方法三：Jacobian 矩阵</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E5%90%91%E9%87%8F%E5%8C%96"><span class="nav-number">4.1.</span> <span class="nav-text">1. 向量化</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E5%AF%B9Kronecker-%E7%A7%AF%E7%9A%84%E5%88%A9%E7%94%A8%EF%BC%88%E5%BC%A0%E9%87%8F%E7%A7%AF%EF%BC%89"><span class="nav-number">4.2.</span> <span class="nav-text">2. 对Kronecker 积的利用（张量积）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-%E9%80%90%E6%AD%A5%E6%8E%A8%E5%AF%BC"><span class="nav-number">4.3.</span> <span class="nav-text">3. 逐步推导</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-%E7%BB%84%E5%90%88"><span class="nav-number">4.4.</span> <span class="nav-text">4. 组合</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-%E8%BF%98%E5%8E%9F%E5%BD%A2%E7%8A%B6%EF%BC%88%E9%80%86%E5%90%91%E9%87%8F%E5%8C%96%EF%BC%89"><span class="nav-number">4.5.</span> <span class="nav-text">5. 还原形状（逆向量化）</span></a></li></ol></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BE%8B%E5%AD%90%E8%83%8C%E6%99%AF"><span class="nav-text">例子背景</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%B9%E6%B3%95%E4%B8%80%EF%BC%9A%E9%80%90%E9%A1%B9%E6%B1%82%E5%AF%BC"><span class="nav-text">方法一：逐项求导</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E9%93%BE%E5%BC%8F%E6%B3%95%E5%88%99"><span class="nav-text">1. 链式法则</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E7%AC%AC%E4%B8%80%E9%98%B6%E6%AE%B5%EF%BC%9A%E5%9F%BA%E7%A1%80%E9%A1%B9%E6%B1%82%E5%AF%BC"><span class="nav-text">2. 第一阶段：基础项求导</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-%E7%AC%AC%E4%BA%8C%E9%98%B6%E6%AE%B5%EF%BC%9ASoftmax-%E6%A2%AF%E5%BA%A6%E7%9A%84%E5%88%86%E7%B1%BB%E8%AE%A8%E8%AE%BA"><span class="nav-text">3. 第二阶段：Softmax 梯度的分类讨论</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-%E7%AC%AC%E4%B8%89%E9%98%B6%E6%AE%B5%EF%BC%9A%E7%BB%84%E5%90%88%E6%B1%82%E5%92%8C"><span class="nav-text">4. 第三阶段：组合求和</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-%E8%BF%98%E5%8E%9F%E4%B8%BA%E7%9F%A9%E9%98%B5%E5%BD%A2%E5%BC%8F"><span class="nav-text">5. 还原为矩阵形式</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%B9%E6%B3%95%E4%BA%8C%EF%BC%9A%E5%88%A9%E7%94%A8%E5%85%A8%E5%BE%AE%E5%88%86"><span class="nav-text">方法二：利用全微分</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E6%95%B4%E4%BD%93%E6%B5%81%E7%A8%8B"><span class="nav-text">1. 整体流程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E7%9F%A9%E9%98%B5%E5%BE%AE%E5%88%86%E7%9A%84%E8%BF%90%E7%AE%97%E6%B3%95%E5%88%99%E4%B8%8ETrace-trick"><span class="nav-text">2. 矩阵微分的运算法则与Trace trick</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-%E5%A4%9A%E5%85%83-Logistic-%E7%9A%84%E6%A2%AF%E5%BA%A6"><span class="nav-text">3. 多元 Logistic 的梯度</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89%EF%BC%9A%E9%82%A3%E4%B9%88%E4%BB%80%E4%B9%88%E6%98%AFJacobian-%E7%9F%A9%E9%98%B5%EF%BC%9F"><span class="nav-text">三：那么什么是Jacobian 矩阵？</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E5%90%91%E9%87%8F%E5%8C%96"><span class="nav-text">1. 向量化</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E5%AF%B9Kronecker-%E7%A7%AF%E7%9A%84%E5%88%A9%E7%94%A8%EF%BC%88%E5%BC%A0%E9%87%8F%E7%A7%AF%EF%BC%89"><span class="nav-text">2. 对Kronecker 积的利用（张量积）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-%E9%80%90%E6%AD%A5%E6%8E%A8%E5%AF%BC"><span class="nav-text">3. 逐步推导</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-%E7%BB%84%E5%90%88"><span class="nav-text">4. 组合</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-%E8%BF%98%E5%8E%9F%E5%BD%A2%E7%8A%B6%EF%BC%88%E9%80%86%E5%90%91%E9%87%8F%E5%8C%96%EF%BC%89"><span class="nav-text">5. 还原形状（逆向量化）</span></a></li></ol></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -207,7 +207,7 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
-          <span class="site-state-item-count">1</span>
+          <span class="site-state-item-count">2</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
@@ -295,7 +295,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">Edited on</span>
-      <time title="Modified: 2026-01-22 21:52:35" itemprop="dateModified" datetime="2026-01-22T21:52:35+08:00">2026-01-22</time>
+      <time title="Modified: 2026-01-24 18:49:15" itemprop="dateModified" datetime="2026-01-24T18:49:15+08:00">2026-01-24</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -480,7 +480,7 @@ $$dl = \text{Tr}( ((\mathbf{p} - \mathbf{y})\mathbf{x}^\top)^\top dW )$$
 
 $$\frac{\partial l}{\partial W} = (\mathbf{p} - \mathbf{y})\mathbf{x}^\top$$
 <p><br> <br> <br></p>
-<h3 id="方法三：Jacobian-矩阵"><a href="#方法三：Jacobian-矩阵" class="headerlink" title="方法三：Jacobian 矩阵"></a>方法三：Jacobian 矩阵</h3><p>一般地，数学上利用全微分法可以优雅地解决问题。然而计算机并不擅长处理那些trace trick。所以在 PyTorch （TensorFlow大概也是一样）自动反向传播的底层，实际上，使用的是 Jacobian（雅可比）矩阵。阅读完之后你会发现，这其实并不是一种新的求导方法，只是通过向量化的方法将所有复杂的高维张量通通化成一维，从而形成某种理解维度上的方便。</p>
+<h3 id="三：那么什么是Jacobian-矩阵？"><a href="#三：那么什么是Jacobian-矩阵？" class="headerlink" title="三：那么什么是Jacobian 矩阵？"></a>三：那么什么是Jacobian 矩阵？</h3><p>一般地，数学上利用全微分法可以优雅地解决问题。然而计算机并不擅长处理那些trace trick。所以在 PyTorch （TensorFlow大概也是一样）自动反向传播的底层，实际上，使用的是 Jacobian（雅可比）矩阵。阅读完之后你会发现，这其实并不是一种新的求导方法，只是通过向量化的方法将所有复杂的高维张量通通化成一维，从而形成某种理解维度上的方便。</p>
 <h4 id="1-向量化"><a href="#1-向量化" class="headerlink" title="1. 向量化"></a>1. 向量化</h4><p>对于一个 $m \times n$ 的矩阵 $W$，第一步是将其元素按顺序排列成列向量。</p>
 <ul>
 <li><strong>向量化（Vectorization）</strong>：记作 $\text{vec}(W)$。如果你有一个 $2 \times 2$ 的矩阵，$\text{vec}(W)$ 就是 $4 \times 1$ 向量。</li>
@@ -542,6 +542,15 @@ $$\frac{\partial l}{\partial W} = (\mathbf{p} - \mathbf{y})\mathbf{x}^\top$$
 
         
 
+          <div class="post-nav">
+            <div class="post-nav-item">
+            </div>
+            <div class="post-nav-item">
+                <a href="/2026/01/21/Assignment1-basics/" rel="next" title="CS336：Assignment1-basics">
+                  CS336：Assignment1-basics <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
     </footer>
   </article>
 </div>

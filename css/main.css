@@ -1385,7 +1385,7 @@ pre code {
     vertical-align: middle;
   }
   .links-of-author a::before {
-    background: #53b81f;
+    background: #ffc6f2;
     display: inline-block;
     margin-right: 3px;
     transform: translateY(-2px);
@@ -3290,9 +3290,6 @@ header.header {
     color: #fff !important; /* 鼠标指上去变成浅绿色 */
     background: #333; /* 加个淡淡的背景色，更有点击感 */
     border-radius: 4px;
-  }
-  span {
-    color: #111 !important; /* 这里改图标颜色，比如改成你那个绿色 */
   }
   a.category-list-link {
     color: #444 !important; /* 这里改图标颜色，比如改成你那个绿色 */
