@@ -22,22 +22,32 @@
 
 <script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.27.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":true,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"},"path":"/search.xml","localsearch":{"enable":true,"top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js" defer></script>
 
-    <meta property="og:type" content="website">
-<meta property="og:title" content="Homepage">
-<meta property="og:url" content="http://example.com/index.html">
+    <meta name="description" content="本章带你编写Transformer，并且最后带你简单算一遍内存和FLOPs，但不包括训练和生成（在4-6章）。 本文少量mathcal相关的markdown无法被github原生渲染器渲染，你可以选择跳过它们或把此.md文件尝试在其他软件中打开。 本课程对transformer相关的算法本身既不全面也不清楚。如果读者对相关算法并不熟悉，笔者推荐去选择性地完成cs231n中神经网络和transfor">
+<meta property="og:type" content="article">
+<meta property="og:title" content="cs336：Assignment1-basics-chapter3">
+<meta property="og:url" content="http://example.com/2026/01/24/Assignment1-basics-chapter3/index.html">
 <meta property="og:site_name" content="Homepage">
+<meta property="og:description" content="本章带你编写Transformer，并且最后带你简单算一遍内存和FLOPs，但不包括训练和生成（在4-6章）。 本文少量mathcal相关的markdown无法被github原生渲染器渲染，你可以选择跳过它们或把此.md文件尝试在其他软件中打开。 本课程对transformer相关的算法本身既不全面也不清楚。如果读者对相关算法并不熟悉，笔者推荐去选择性地完成cs231n中神经网络和transfor">
 <meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/2026/01/24/Assignment1-basics-chapter3/images/image.png">
+<meta property="og:image" content="http://example.com/2026/01/24/Assignment1-basics-chapter3/images/image-2.png">
+<meta property="article:published_time" content="2026-01-24T14:15:15.000Z">
+<meta property="article:modified_time" content="2026-02-05T06:39:52.766Z">
 <meta property="article:author" content="Zian Wang">
+<meta property="article:tag" content="机器学习">
+<meta property="article:tag" content="深度学习">
+<meta property="article:tag" content="cs336">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2026/01/24/Assignment1-basics-chapter3/images/image.png">
 
 
-<link rel="canonical" href="http://example.com/">
+<link rel="canonical" href="http://example.com/2026/01/24/Assignment1-basics-chapter3/">
 
 
-<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":true,"isPost":false,"lang":"en","comments":"","permalink":"","path":"index.html","title":""}</script>
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"en","comments":true,"permalink":"http://example.com/2026/01/24/Assignment1-basics-chapter3/","path":"2026/01/24/Assignment1-basics-chapter3/","title":"cs336：Assignment1-basics-chapter3"}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
-<title>Homepage</title>
+<title>cs336：Assignment1-basics-chapter3 | Homepage</title>
   
 
 
@@ -119,7 +129,7 @@
 
     <a href="/" class="brand" rel="start">
       <i class="logo-line"></i>
-      <h1 class="site-title">Homepage</h1>
+      <p class="site-title">Homepage</p>
       <i class="logo-line"></i>
     </a>
   </div>
@@ -172,7 +182,7 @@
   
   <aside class="sidebar">
 
-    <div class="sidebar-inner sidebar-overview-active">
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
       <ul class="sidebar-nav">
         <li class="sidebar-nav-toc">
           Table of Contents
@@ -185,6 +195,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#3-Transformer-%E6%9E%B6%E6%9E%84"><span class="nav-text">3  Transformer 架构</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#3-1-Transformer-%E8%AF%AD%E8%A8%80%E6%A8%A1%E5%9E%8B%EF%BC%88LM%EF%BC%89"><span class="nav-text">3.1 Transformer 语言模型（LM）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Figure-1"><span class="nav-text">Figure 1</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-1-Token-%E5%B5%8C%E5%85%A5"><span class="nav-text">3.1.1 Token 嵌入</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-2-Pre-norm-Transformer-%E5%9D%97"><span class="nav-text">3.1.2 Pre-norm Transformer 块</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-2-%E8%BE%93%E5%87%BA%E5%BD%92%E4%B8%80%E5%8C%96%E4%B8%8E%E5%B5%8C%E5%85%A5"><span class="nav-text">3.2 输出归一化与嵌入</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-3-%E6%B3%A8%EF%BC%9A%E6%89%B9%E5%A4%84%E7%90%86%E3%80%81Einsum-%E4%B8%8E%E9%AB%98%E6%95%88%E8%AE%A1%E7%AE%97"><span class="nav-text">3.3 注：批处理、Einsum 与高效计算</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BE%8B-einstein-example1-%E4%BD%BF%E7%94%A8-einops-einsum-%E8%BF%9B%E8%A1%8C%E6%89%B9%E9%87%8F%E7%9F%A9%E9%98%B5%E4%B9%98%E6%B3%95"><span class="nav-text">例 (einstein_example1): 使用 einops.einsum 进行批量矩阵乘法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BE%8B-einstein-example2-%E4%BD%BF%E7%94%A8-einops-rearrange-%E8%BF%9B%E8%A1%8C%E5%B9%BF%E6%92%AD%E6%93%8D%E4%BD%9C"><span class="nav-text">例 (einstein_example2): 使用 einops.rearrange 进行广播操作</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BE%8B-einstein-example3-%E4%BD%BF%E7%94%A8-einops-rearrange-%E8%BF%9B%E8%A1%8C%E5%83%8F%E7%B4%A0%E6%B7%B7%E5%90%88"><span class="nav-text">例 (einstein_example3): 使用 einops.rearrange 进行像素混合</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3-1-%E6%95%B0%E5%AD%A6%E7%AC%A6%E5%8F%B7%E4%B8%8E%E5%86%85%E5%AD%98%E6%8E%92%E5%BA%8F"><span class="nav-text">3.3.1 数学符号与内存排序</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-4-%E5%9F%BA%E7%A1%80%E6%9E%84%E5%BB%BA%E5%9D%97%EF%BC%9A%E7%BA%BF%E6%80%A7%E5%B1%82%E4%B8%8E%E5%B5%8C%E5%85%A5%E6%A8%A1%E5%9D%97"><span class="nav-text">3.4 基础构建块：线性层与嵌入模块</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-4-1-%E5%8F%82%E6%95%B0%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="nav-text">3.4.1 参数初始化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-4-2-%E7%BA%BF%E6%80%A7%E6%A8%A1%E5%9D%97"><span class="nav-text">3.4.2 线性模块</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Problem-linear-%E5%AE%9E%E7%8E%B0%E7%BA%BF%E6%80%A7%E6%A8%A1%E5%9D%97-1-%E5%88%86"><span class="nav-text">Problem (linear): 实现线性模块 (1 分)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Answer%EF%BC%9A"><span class="nav-text">Answer：</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-4-3-%E5%B5%8C%E5%85%A5%E6%A8%A1%E5%9D%97"><span class="nav-text">3.4.3 嵌入模块</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Problem-embedding-%E5%AE%9E%E7%8E%B0%E5%B5%8C%E5%85%A5%E6%A8%A1%E5%9D%97-1-%E5%88%86"><span class="nav-text">Problem (embedding): 实现嵌入模块 (1 分)</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Answer%EF%BC%9A-1"><span class="nav-text">Answer：</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-5-Pre-Norm-Transformer-%E5%9D%97"><span class="nav-text">3.5 Pre-Norm Transformer 块</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Figure-2"><span class="nav-text">Figure 2</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-5-1-%E5%9D%87%E6%96%B9%E6%A0%B9%E5%B1%82%E5%BD%92%E4%B8%80%E5%8C%96-Layer-Normalization"><span class="nav-text">3.5.1 均方根层归一化 (Layer Normalization)</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Problem-rmsnorm-%E5%9D%87%E6%96%B9%E6%A0%B9%E5%B1%82%E5%BD%92%E4%B8%80%E5%8C%96-1-%E5%88%86"><span class="nav-text">Problem (rmsnorm): 均方根层归一化 (1 分)</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Answer%EF%BC%9A-2"><span class="nav-text">Answer：</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-5-2-%E9%80%90%E4%BD%8D%E7%BD%AE%E5%89%8D%E9%A6%88%E7%BD%91%E7%BB%9C"><span class="nav-text">3.5.2 逐位置前馈网络</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Problem-positionwise-feedforward-%E5%AE%9E%E7%8E%B0%E9%80%90%E4%BD%8D%E7%BD%AE%E5%89%8D%E9%A6%88%E7%BD%91%E7%BB%9C-2-%E5%88%86"><span class="nav-text">Problem (positionwise_feedforward): 实现逐位置前馈网络 (2 分)</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Answer%EF%BC%9A-3"><span class="nav-text">Answer：</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-5-3-%E7%9B%B8%E5%AF%B9%E4%BD%8D%E7%BD%AE%E5%B5%8C%E5%85%A5"><span class="nav-text">3.5.3 相对位置嵌入</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Problem-rope-%E5%AE%9E%E7%8E%B0-RoPE-2-%E5%88%86"><span class="nav-text">Problem (rope): 实现 RoPE (2 分)</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Answer%EF%BC%9A-4"><span class="nav-text">Answer：</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-5-4-%E7%BC%A9%E6%94%BE%E7%82%B9%E7%A7%AF%E6%B3%A8%E6%84%8F%E5%8A%9B"><span class="nav-text">3.5.4 缩放点积注意力</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Problem-softmax-%E5%AE%9E%E7%8E%B0-softmax-1-%E5%88%86"><span class="nav-text">Problem (softmax): 实现 softmax (1 分)</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Answer%EF%BC%9A-5"><span class="nav-text">Answer：</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Problem-scaled-dot-product-attention-%E5%AE%9E%E7%8E%B0%E7%82%B9%E7%A7%AF%E6%B3%A8%E6%84%8F%E5%8A%9B%E5%87%BD%E6%95%B0-5-points"><span class="nav-text">Problem (scaled_dot_product_attention): 实现点积注意力函数(5 points)</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Answer%EF%BC%9A-6"><span class="nav-text">Answer：</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-5-5-Causal-Multi-Head-Self-Attention"><span class="nav-text">3.5.5 Causal Multi-Head Self-Attention</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Problem-multihead-self-attention-Implement-causal-multi-head-self-attention-5-points"><span class="nav-text">Problem (multihead_self_attention): Implement causal multi-head self-attention (5 points)</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Answer%EF%BC%9A-7"><span class="nav-text">Answer：</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-6-The-Full-Transformer-LM"><span class="nav-text">3.6 The Full Transformer LM</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Problem-transformer-block-Implement-the-Transformer-block-3-points"><span class="nav-text">Problem (transformer_block): Implement the Transformer block (3 points)</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Answer%EF%BC%9A-8"><span class="nav-text">Answer：</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Problem-transformer-lm-Implementing-the-Transformer-LM-3-points"><span class="nav-text">Problem (transformer_lm): Implementing the Transformer LM (3 points)</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Answer%EF%BC%9A-9"><span class="nav-text">Answer：</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Problem-transformer-accounting-Transformer-LM-resource-accounting-5-points"><span class="nav-text">Problem (transformer_accounting): Transformer LM resource accounting (5 points)</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Answer%EF%BC%9A-10"><span class="nav-text">Answer：</span></a></li></ol></li></ol></li></ol></li></ol></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -240,226 +251,17 @@
 
     </div>
 
-    <div class="main-inner index posts-expand">
+    <div class="main-inner post posts-expand">
 
-    
+
+  
 
 
 <div class="post-block">
   
   
 
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2026/01/27/tokenizer.py/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.jpg">
-      <meta itemprop="name" content="Zian Wang">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Homepage">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content=" | Homepage">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2026/01/27/tokenizer.py/" class="post-title-link" itemprop="url">tokenizer.py</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">Posted on</span>
-
-      <time title="Created: 2026-01-27 22:15:15" itemprop="dateCreated datePublished" datetime="2026-01-27T22:15:15+08:00">2026-01-27</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">Edited on</span>
-      <time title="Modified: 2026-01-29 16:39:44" itemprop="dateModified" datetime="2026-01-29T16:39:44+08:00">2026-01-29</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">In</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/cs336/" itemprop="url" rel="index"><span itemprop="name">cs336</span></a>
-        </span>
-    </span>
-
-  
-    <span class="post-meta-item" title="Word count in article">
-      <span class="post-meta-item-icon">
-        <i class="far fa-file-word"></i>
-      </span>
-      <span class="post-meta-item-text">Word count in article: </span>
-      <span>7k</span>
-    </span>
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <p>本文包含对Problem (train_bpe): BPE Tokenizer Training一问的解答及说明。</p>
-<p>完整代码见<a target="_blank" rel="noopener" href="https://github.com/Zian-2/cs336_assignments_and_notes/blob/main/assignment1-basics/cs336_basics/tokenizer.py">https://github.com/Zian-2/cs336_assignments_and_notes/blob/main/assignment1-basics/cs336_basics/tokenizer.py</a></p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> os</span><br><span class="line"><span class="keyword">from</span> collections <span class="keyword">import</span> Counter</span><br><span class="line"><span class="keyword">import</span> regex <span class="keyword">as</span> re</span><br><span class="line"><span class="keyword">import</span> multiprocessing</span><br><span class="line"><span class="keyword">from</span> .pretokenization_example <span class="keyword">import</span> find_chunk_boundaries</span><br></pre></td></tr></table></figure>
-<p>Counter : 一种特殊的数据类型，本质上是字典，下面你会看到它在计数层面上会有一些方便。<br>regex：引入正则表达式<br>multiprocessing: 用于并行处理</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 预编译正则表达式</span></span><br><span class="line">PAT = re.<span class="built_in">compile</span>(<span class="string">r&quot;&quot;&quot;&#x27;(?:[sdmt]|ll|ve|re)| ?\p&#123;L&#125;+| ?\p&#123;N&#125;+| ?[^\s\p&#123;L&#125;\p&#123;N&#125;]+|\s+(?!\S)|\s+&quot;&quot;&quot;</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">pre_tokenization</span>(<span class="params">chunk,special_tokens</span>)-&gt;<span class="built_in">list</span>[<span class="built_in">str</span>]:</span><br><span class="line">        <span class="comment"># 预分词：先从special_token切开，再过一遍正则切成单词</span></span><br><span class="line">        result = []</span><br><span class="line">        <span class="comment"># 切割special_tokens</span></span><br><span class="line">        special_pat = <span class="string">&quot;(&quot;</span> + <span class="string">&quot;|&quot;</span>.join(re.escape(t) <span class="keyword">for</span> t <span class="keyword">in</span> special_tokens) + <span class="string">&quot;)&quot;</span></span><br><span class="line">        parts = re.split(special_pat, chunk)</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">for</span> part <span class="keyword">in</span> parts:</span><br><span class="line">            <span class="keyword">if</span> <span class="keyword">not</span> part:</span><br><span class="line">                <span class="keyword">continue</span></span><br><span class="line">            <span class="keyword">if</span> part <span class="keyword">in</span> special_tokens:</span><br><span class="line">                <span class="keyword">continue</span></span><br><span class="line"></span><br><span class="line">            <span class="comment"># 预分词</span></span><br><span class="line">            matches = PAT.finditer(part)</span><br><span class="line">            <span class="keyword">for</span> m <span class="keyword">in</span> matches:</span><br><span class="line">                result.append(<span class="string">f&quot;<span class="subst">&#123;m.group()&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> result</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-<p>五个部分分别处理：缩写后缀（’ll, ‘ve, ‘t , ‘s等）；连续字母（单词）；连续数字；连续标点符号；连续纯空格。<br>正则表达式的编译是比较昂贵的，放在外面从而不用每次都编译一遍。<br>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2026/01/27/tokenizer.py/#more" rel="contents">
-                Read more &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2026/01/24/Assignment1-basics-chapter1&2/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.jpg">
-      <meta itemprop="name" content="Zian Wang">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Homepage">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content=" | Homepage">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2026/01/24/Assignment1-basics-chapter1&2/" class="post-title-link" itemprop="url">cs336：Assignment1-basics-chapter1&2</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">Posted on</span>
-
-      <time title="Created: 2026-01-24 22:15:15" itemprop="dateCreated datePublished" datetime="2026-01-24T22:15:15+08:00">2026-01-24</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">Edited on</span>
-      <time title="Modified: 2026-02-02 21:09:06" itemprop="dateModified" datetime="2026-02-02T21:09:06+08:00">2026-02-02</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">In</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/cs336/" itemprop="url" rel="index"><span itemprop="name">cs336</span></a>
-        </span>
-    </span>
-
-  
-    <span class="post-meta-item" title="Word count in article">
-      <span class="post-meta-item-icon">
-        <i class="far fa-file-word"></i>
-      </span>
-      <span class="post-meta-item-text">Word count in article: </span>
-      <span>21k</span>
-    </span>
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <p>本文为cs336的assignment1中分词器对应章节的参考解答和课程笔记。   </p>
-<p>1 本文范围内的作业暂时还不需要用到GPU<br>2 本课程并未提供好系统适配，所以事实上不推荐在win上完成作业。在你的服务器or虚拟机上完成可以避免很多麻烦。</p>
-<h1 id="Setup："><a href="#Setup：" class="headerlink" title="Setup："></a>Setup：</h1><h2 id="环境配置："><a href="#环境配置：" class="headerlink" title="环境配置："></a>环境配置：</h2><p>按照<a target="_blank" rel="noopener" href="https://github.com/stanford-cs336/assignment1-basics/tree/main">https://github.com/stanford-cs336/assignment1-basics/tree/main</a> 中README的说明配置并测试uv。  </p>
-<p>如果你在Windows下，uv run pytest 时会出现问题，因为你没有办法import resource。<br>进行如下操作：<br>打开\assignment1-basics\tests\test_tokenizer.py， 删除第5行的import resource，或修改：  </p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">try</span>:</span><br><span class="line">    <span class="keyword">import</span> resource</span><br><span class="line"><span class="keyword">except</span> ImportError:</span><br><span class="line">    resource = <span class="literal">None</span></span><br></pre></td></tr></table></figure>
-<p>然后重新uv run pytest。  </p>
-<h2 id="数据下载："><a href="#数据下载：" class="headerlink" title="数据下载："></a>数据下载：</h2><p>下载 TinyStories data 和 subsample of OpenWebText：<br>课程原生使用的是wget； windows下，推荐使用curl。试着使用如下命令：<br><figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 创建并进入数据目录</span></span><br><span class="line">mkdir <span class="literal">-p</span> <span class="keyword">data</span></span><br><span class="line"><span class="built_in">cd</span> <span class="keyword">data</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 下载 TinyStories</span></span><br><span class="line">curl.exe <span class="literal">-L</span> <span class="literal">-o</span> TinyStoriesV2<span class="literal">-GPT4-train</span>.txt https://huggingface.co/datasets/roneneldan/TinyStories/resolve/main/TinyStoriesV2<span class="literal">-GPT4-train</span>.txt</span><br><span class="line">curl.exe <span class="literal">-L</span> <span class="literal">-o</span> TinyStoriesV2<span class="literal">-GPT4-valid</span>.txt https://huggingface.co/datasets/roneneldan/TinyStories/resolve/main/TinyStoriesV2<span class="literal">-GPT4-valid</span>.txt</span><br><span class="line"></span><br><span class="line"><span class="comment"># 下载 OpenWebText</span></span><br><span class="line">curl.exe <span class="literal">-L</span> <span class="literal">-o</span> owt_train.txt.gz https://huggingface.co/datasets/stanford<span class="literal">-cs336</span>/owt<span class="literal">-sample</span>/resolve/main/owt_train.txt.gz</span><br><span class="line">curl.exe <span class="literal">-L</span> <span class="literal">-o</span> owt_valid.txt.gz https://huggingface.co/datasets/stanford<span class="literal">-cs336</span>/owt<span class="literal">-sample</span>/resolve/main/owt_valid.txt.gz</span><br><span class="line"></span><br><span class="line"><span class="comment"># 解压 .gz 文件</span></span><br><span class="line"><span class="comment"># Windows 10/11 自带 tar.exe，可以替代 gunzip</span></span><br><span class="line">tar.exe <span class="literal">-xvzf</span> owt_train.txt.gz</span><br><span class="line">tar.exe <span class="literal">-xvzf</span> owt_valid.txt.gz</span><br><span class="line"></span><br><span class="line"><span class="built_in">cd</span> ..</span><br></pre></td></tr></table></figure></p>
-<p>如果解压不成功，考虑使用python原生解压。<br>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2026/01/24/Assignment1-basics-chapter1&2/#more" rel="contents">
-                Read more &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
     <link itemprop="mainEntityOfPage" href="http://example.com/2026/01/24/Assignment1-basics-chapter3/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -473,13 +275,13 @@
     </span>
 
     <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content=" | Homepage">
+      <meta itemprop="name" content="cs336：Assignment1-basics-chapter3 | Homepage">
       <meta itemprop="description" content="">
     </span>
       <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2026/01/24/Assignment1-basics-chapter3/" class="post-title-link" itemprop="url">cs336：Assignment1-basics-chapter3</a>
-        </h2>
+        <h1 class="post-title" itemprop="name headline">
+          cs336：Assignment1-basics-chapter3
+        </h1>
 
         <div class="post-meta-container">
           <div class="post-meta">
@@ -509,6 +311,13 @@
     </span>
 
   
+    <span class="post-meta-item" title="Views" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">Views: </span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
     <span class="post-meta-item" title="Word count in article">
       <span class="post-meta-item-icon">
         <i class="far fa-file-word"></i>
@@ -524,8 +333,7 @@
     
     
     
-    <div class="post-body" itemprop="articleBody">
-          <p>本章带你编写Transformer，并且最后带你简单算一遍内存和FLOPs，但不包括训练和生成（在4-6章）。</p>
+    <div class="post-body" itemprop="articleBody"><p>本章带你编写Transformer，并且最后带你简单算一遍内存和FLOPs，但不包括训练和生成（在4-6章）。</p>
 <p>本文少量mathcal相关的markdown无法被github原生渲染器渲染，你可以选择跳过它们或把此.md文件尝试在其他软件中打开。</p>
 <p>本课程对transformer相关的算法本身既不全面也不清楚。如果读者对相关算法并不熟悉，笔者推荐去选择性地完成cs231n中神经网络和transformer相关的作业；内含充足的scaffolding和数学原理内容（主要包括反向传播的推导），能够在带你速通相关算法的同时，让你对这些神经网络的整个过程有更良好的认识。  </p>
 <p>如果你熟悉相关算法，chapter3和接下来的章节要比chapter2简单得多。你大可以vibecode softmax之类你非常熟悉的任务，在数个小时内完成ch.3。  </p>
@@ -721,7 +529,6 @@ $$y = x + MultiHeadSelfAttention(RMSNorm(x)) \quad (15)$$
 <p>(d) 只考虑transformer：<br><figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">| 模型规格 (Model) | d<span class="emphasis">_model | 层数 | FFN % | Attention % | 投影层 % |</span></span><br><span class="line"><span class="emphasis">| :---            | :---:   |:---:| :---: | :---:       | :---:   |</span></span><br><span class="line"><span class="emphasis">| <span class="strong">**GPT-2 Small**</span> | 768     | 12  | 62.6% | 11.3%       | 26.1%   |</span></span><br><span class="line"><span class="emphasis">| <span class="strong">**GPT-2 Medium**</span>| 1024    | 24  | 65.1% | 8.8%        | 26.1%   |</span></span><br><span class="line"><span class="emphasis">| <span class="strong">**GPT-2 Large**</span> | 1280    | 36  | 67.3% | 7.2%        | 25.5%   |</span></span><br><span class="line"><span class="emphasis">| <span class="strong">**GPT-2 XL**</span>    | 1600    | 48  | 69.5% | 5.9%        | 24.6%   |</span></span><br></pre></td></tr></table></figure></p>
 <p>(e)<br>1 可计算出总FLOPs增大34倍。<br>2 由(b)可见，FFN和投影是关于T的(增大16倍)，attention是关于T^2的(增大256倍)，所以attention的占比会远比之前大。</p>
 
-      
     </div>
 
     
@@ -729,127 +536,30 @@ $$y = x + MultiHeadSelfAttention(RMSNorm(x)) \quad (15)$$
     
 
     <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
+          <div class="post-tags">
+              <a href="/tags/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/" rel="tag"># 机器学习</a>
+              <a href="/tags/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/" rel="tag"># 深度学习</a>
+              <a href="/tags/cs336/" rel="tag"># cs336</a>
+          </div>
 
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2026/01/21/%E7%9F%A9%E9%98%B5%E6%B1%82%E5%AF%BC/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.jpg">
-      <meta itemprop="name" content="Zian Wang">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Homepage">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content=" | Homepage">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2026/01/21/%E7%9F%A9%E9%98%B5%E6%B1%82%E5%AF%BC/" class="post-title-link" itemprop="url">矩阵求导理论：几种表示</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">Posted on</span>
-
-      <time title="Created: 2026-01-21 22:15:15" itemprop="dateCreated datePublished" datetime="2026-01-21T22:15:15+08:00">2026-01-21</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">Edited on</span>
-      <time title="Modified: 2026-01-24 18:49:15" itemprop="dateModified" datetime="2026-01-24T18:49:15+08:00">2026-01-24</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">In</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/%E6%95%B0%E5%AD%A6/" itemprop="url" rel="index"><span itemprop="name">数学</span></a>
-        </span>
-    </span>
-
-  
-    <span class="post-meta-item" title="Word count in article">
-      <span class="post-meta-item-icon">
-        <i class="far fa-file-word"></i>
-      </span>
-      <span class="post-meta-item-text">Word count in article: </span>
-      <span>7.6k</span>
-    </span>
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <p><strong>提示：如果latex矩阵的渲染有问题，刷新往往能解决问题</strong><br><br></p>
-<p>也许我们可以说，张量就是矩阵，梯度就是导数，张量的梯度本质上就是矩阵求导的ml小黑话说法。然而由于一些众所周知的原因，很多人甚至在学习线性代数之前就已经走进了深度学习，初次面对高维张量的求导往往感到混乱。而市面上如The Matrix Cookbook等的工具书又往往太细节，翻译也不尽如人意。本文将以最基础的多元 Logistic 回归（Multinomial Logistic Regression）为例，从大方向上探讨三种不同的推导范式。</p>
-<h3 id="例子背景"><a href="#例子背景" class="headerlink" title="例子背景"></a>例子背景</h3><p>我们设定一个典型的分类场景：</p>
-<ul>
-<li><p><strong>输入向量</strong>：$\mathbf{x} \in \mathbb{R}^{n \times 1}$。</p>
-</li>
-<li><p><strong>权重矩阵</strong>：$W \in \mathbb{R}^{m \times n}$。</p>
-</li>
-<li><p><strong>线性输出</strong>：$\mathbf{a} = W\mathbf{x} \in \mathbb{R}^{m \times 1}$。</p>
-</li>
-<li><p><strong>预测概率</strong>：$\mathbf{p} = \text{softmax}(\mathbf{a}) \in \mathbb{R}^{m \times 1}$，其中第 $i$ 个分量 $p_i = \frac{\exp(a_i)}{\sum_{j=1}^m \exp(a_j)}$。</p>
-</li>
-<li><p><strong>目标标签</strong>：$\mathbf{y} \in \mathbb{R}^{m \times 1}$，是一个 One-hot 向量（仅有一个元素为 1，其余为 0）。</p>
-</li>
-<li><p><strong>损失函数</strong>：标量 $l = -\mathbf{y}^\top \log \mathbf{p} = -\sum_{k=1}^m y_k \ln p_k$。</p>
-</li>
-</ul>
-<p>我们的目标是求出梯度矩阵 $\nabla_W l$（即 $\frac{\partial l}{\partial W}$）。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2026/01/21/%E7%9F%A9%E9%98%B5%E6%B1%82%E5%AF%BC/#more" rel="contents">
-                Read more &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
         
-      
-    </div>
 
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2026/01/21/%E7%9F%A9%E9%98%B5%E6%B1%82%E5%AF%BC/" rel="prev" title="矩阵求导理论：几种表示">
+                  <i class="fa fa-angle-left"></i> 矩阵求导理论：几种表示
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2026/01/24/Assignment1-basics-chapter1&2/" rel="next" title="cs336：Assignment1-basics-chapter1&amp;2">
+                  cs336：Assignment1-basics-chapter1&2 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
     </footer>
   </article>
 </div>
+
 
 
 
