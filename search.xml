@@ -114,222 +114,6 @@
       </tags>
   </entry>
   <entry>
-    <title>矩阵求导理论：几种表示</title>
-    <url>/%E7%9F%A9%E9%98%B5%E6%B1%82%E5%AF%BC/</url>
-    <content><![CDATA[<p><strong>提示：如果latex矩阵的渲染有问题，刷新往往能解决问题</strong><br><br></p>
-<p>也许我们可以说，张量就是矩阵，梯度就是导数，张量的梯度本质上就是矩阵求导的ml小黑话说法。然而由于一些众所周知的原因，很多人甚至在学习线性代数之前就已经走进了深度学习，初次面对高维张量的求导往往感到混乱。而市面上如The Matrix Cookbook等的工具书又往往太细节，翻译也不尽如人意。本文将以最基础的多元 Logistic 回归（Multinomial Logistic Regression）为例，从大方向上探讨三种不同的推导范式。</p>
-<h3 id="例子背景"><a href="#例子背景" class="headerlink" title="例子背景"></a>例子背景</h3><p>我们设定一个典型的分类场景：</p>
-<ul>
-<li><p><strong>输入向量</strong>：$\mathbf{x} \in \mathbb{R}^{n \times 1}$。</p>
-</li>
-<li><p><strong>权重矩阵</strong>：$W \in \mathbb{R}^{m \times n}$。</p>
-</li>
-<li><p><strong>线性输出</strong>：$\mathbf{a} = W\mathbf{x} \in \mathbb{R}^{m \times 1}$。</p>
-</li>
-<li><p><strong>预测概率</strong>：$\mathbf{p} = \text{softmax}(\mathbf{a}) \in \mathbb{R}^{m \times 1}$，其中第 $i$ 个分量 $p_i = \frac{\exp(a_i)}{\sum_{j=1}^m \exp(a_j)}$。</p>
-</li>
-<li><p><strong>目标标签</strong>：$\mathbf{y} \in \mathbb{R}^{m \times 1}$，是一个 One-hot 向量（仅有一个元素为 1，其余为 0）。</p>
-</li>
-<li><p><strong>损失函数</strong>：标量 $l = -\mathbf{y}^\top \log \mathbf{p} = -\sum_{k=1}^m y_k \ln p_k$。</p>
-</li>
-</ul>
-<p>我们的目标是求出梯度矩阵 $\nabla_W l$（即 $\frac{\partial l}{\partial W}$）。</p>
-<span id="more"></span>
-<p><br> <br> </p>
-<h3 id="方法一：逐项求导"><a href="#方法一：逐项求导" class="headerlink" title="方法一：逐项求导"></a>方法一：逐项求导</h3><p>当然了，只要你会求偏导，肯定就会对世界上所有的矩阵求导，只要确定了定义，就可以对应地求导，因为矩阵本质上是标量的排列。我们通过观察单个权重 $W_{ij}$ 的变动如何影响最终损失 $l$，最后再将规律汇总回矩阵形式。</p>
-<h4 id="1-链式法则"><a href="#1-链式法则" class="headerlink" title="1. 链式法则"></a>1. 链式法则</h4><p>我们的目标是求 $l$ 对 $W_{ij}$（矩阵 $W$ 第 $i$ 行第 $j$ 列的元素）的偏导数。</p>
-<p>根据函数依赖关系：$W_{ij}$ 的变动首先影响线性输出 $a_i$，由于 $a_i$ 是 Softmax 函数的输入，它会进一步影响<strong>所有的</strong>预测概率 $p_k (k=1, \dots, m)$，最后导致损失 $l$ 的变化。</p>
-<p>链式法则展开如下：</p>
-
-$$\frac{\partial l}{\partial W_{ij}} = \sum_{k=1}^m \frac{\partial l}{\partial p_k} \cdot \frac{\partial p_k}{\partial a_i} \cdot \frac{\partial a_i}{\partial W_{ij}}$$
-<h4 id="2-第一阶段：基础项求导"><a href="#2-第一阶段：基础项求导" class="headerlink" title="2. 第一阶段：基础项求导"></a>2. 第一阶段：基础项求导</h4><ul>
-<li><p><strong>计算 $\frac{\partial a_i}{\partial W_{ij}}$</strong>：</p>
-<p>  已知 $a_i = \sum_{t=1}^n W_{it}x_t = W_{i1}x_1 + \dots + W_{ij}x_j + \dots$。</p>
-<p>  对 $W_{ij}$ 求导得：$\frac{\partial a_i}{\partial W_{ij}} = x_j$。</p>
-</li>
-<li><p><strong>计算 $\frac{\partial l}{\partial p_k}$</strong>：</p>
-<p>  已知 $l = -\sum_{k=1}^m y_k \ln p_k$。</p>
-<p>  对 $p_k$ 求导得：$\frac{\partial l}{\partial p_k} = -\frac{y_k}{p_k}$。</p>
-</li>
-</ul>
-<h4 id="3-第二阶段：Softmax-梯度的分类讨论"><a href="#3-第二阶段：Softmax-梯度的分类讨论" class="headerlink" title="3. 第二阶段：Softmax 梯度的分类讨论"></a>3. 第二阶段：Softmax 梯度的分类讨论</h4><p>我们需要计算 $\frac{\partial p_k}{\partial a_i}$。由于 $p_k = \frac{e^{a_k}}{\sum_{j=1}^m e^{a_j}}$，分母包含所有 $a$，因此需要分两种情况：</p>
-<ul>
-<li><p><strong>情况 A：当 $k = i$ 时（输出下标等于求导下标）</strong></p>
-<p>  利用商的求导法则：</p>
-
-$$\frac{\partial p_i}{\partial a_i} = \frac{e^{a_i}(\sum e^a) - e^{a_i}(e^{a_i})}{(\sum e^a)^2} = \frac{e^{a_i}}{\sum e^a} - \left(\frac{e^{a_i}}{\sum e^a}\right)^2 = p_i(1 - p_i)$$
-</li>
-<li><p><strong>情况 B：当 $k \neq i$ 时（输出下标不等于求导下标）</strong></p>
-
-$$\frac{\partial p_k}{\partial a_i} = \frac{0 \cdot (\sum e^a) - e^{a_k}(e^{a_i})}{(\sum e^a)^2} = -\frac{e^{a_k}}{\sum e^a} \cdot \frac{e^{a_i}}{\sum e^a} = -p_k p_i$$
-</li>
-</ul>
-<h4 id="4-第三阶段：组合求和"><a href="#4-第三阶段：组合求和" class="headerlink" title="4. 第三阶段：组合求和"></a>4. 第三阶段：组合求和</h4><p>将上述结果代入第一步的链式法则总式中，并将求和号按照 $k=i$ 和 $k \neq i$ 进行拆解：</p>
-
-$$\frac{\partial l}{\partial W_{ij}} = \left( \sum_{k \neq i} \frac{\partial l}{\partial p_k} \frac{\partial p_k}{\partial a_i} + \frac{\partial l}{\partial p_i} \frac{\partial p_i}{\partial a_i} \right) \cdot \frac{\partial a_i}{\partial W_{ij}}$$
-<p>代入具体的偏导表达式：</p>
-
-$$\frac{\partial l}{\partial W_{ij}} = \left( \sum_{k \neq i} \left(-\frac{y_k}{p_k}\right)(-p_k p_i) + \left(-\frac{y_i}{p_i}\right)p_i(1-p_i) \right) \cdot x_j$$
-<p>简化括号内的各项：</p>
-<ul>
-<li><p>第一部分：$\sum_{k \neq i} y_k p_i$</p>
-</li>
-<li><p>第二部分：$-y_i(1 - p_i) = -y_i + y_i p_i$</p>
-</li>
-</ul>
-<p>组合后得到：</p>
-
-$$\frac{\partial l}{\partial W_{ij}} = \left( \sum_{k \neq i} y_k p_i + y_i p_i - y_i \right) x_j$$
-
-$$\frac{\partial l}{\partial W_{ij}} = \left( p_i \left( \sum_{k=1}^m y_k \right) - y_i \right) x_j$$
-<p>由于标签向量 $\mathbf{y}$ 是 One-hot 的，满足 $\sum_{k=1}^m y_k = 1$，上式最终简化为：</p>
-
-$$\frac{\partial l}{\partial W_{ij}} = (p_i - y_i)x_j$$
-<h4 id="5-还原为矩阵形式"><a href="#5-还原为矩阵形式" class="headerlink" title="5. 还原为矩阵形式"></a>5. 还原为矩阵形式</h4><p>我们求出了梯度矩阵中每一个元素 $(i, j)$ 的值。观察发现，这正好对应向量 $(\mathbf{p}-\mathbf{y})$ 的第 $i$ 个元素与向量 $\mathbf{x}$ 的第 $j$ 个元素的乘积。</p>
-<p>于是结果为：</p>
-
-$$\frac{\partial l}{\partial W} = (\mathbf{p} - \mathbf{y})\mathbf{x}^\top$$
-<p><br> <br> <br></p>
-<h3 id="方法二：利用全微分"><a href="#方法二：利用全微分" class="headerlink" title="方法二：利用全微分"></a>方法二：利用全微分</h3><p>你都用矩阵了，为什么还要逐项求导呢？矩阵就是矩阵，矩阵是不能不和标量切割的。下面我们将会看到，将矩阵整体不加拆分地求导有一些很美好的性质。实践上，整体的矩阵求导也使我们更少地受维度匹配问题的侵扰，理解上也更为简洁与直觉。</p>
-<h4 id="1-整体流程"><a href="#1-整体流程" class="headerlink" title="1. 整体流程"></a>1. 整体流程</h4><p>在标量微积分中，我们知道 $df = f’(x)dx$。全微分法将这一思想推广到矩阵：对于一个以矩阵 $X$ 为自变量的标量函数 $f(X)$，其全微分一定可以表示为如下标准形式：</p>
-
-$$df = \sum_{i,j} \frac{\partial f}{\partial X_{ij}} dX_{ij}$$
-<p>为了避免陷入下标求和的泥潭，我们利用迹函数（Trace）。两个同维矩阵 $A$ 和 $B$ 的内积（对应元素相乘再求和）可以写成 $\text{Tr}(A^\top B)$是常用而易得的结论。因此，上述微分式可以写成：</p>
-
-$$df = \text{Tr}(G^\top dX)$$
-<p>这里， $G$ 就是梯度矩阵 $\frac{\partial f}{\partial X}$； dX的定义你可以显然地看出。</p>
-<p><strong>全微分法的标准操作流程如下：</strong></p>
-<ol>
-<li><p><strong>写出微分式</strong>：利用微分运算法则，对目标标量 $l$ 直接求微分 $dl$。</p>
-</li>
-<li><p><strong>套入迹函数</strong>：将 $dl$ 放入迹中，即 $dl = \text{Tr}(dl)$（因为标量的迹等于自身）。</p>
-</li>
-<li><p><strong>应用Trace Trick</strong>：利用迹函数的循环复用性 $\text{Tr}(ABC) = \text{Tr}(BCA)$，通过左右挪动，将所有的 $dX$（或 $dW$）变动项孤立到式子的最右端。</p>
-</li>
-<li><p><strong>读取梯度</strong>：将式子整理成 $dl = \text{Tr}(G^\top dW)$ 的标准形态，直接读出 $G$。</p>
-</li>
-</ol>
-<h4 id="2-矩阵微分的运算法则与Trace-trick"><a href="#2-矩阵微分的运算法则与Trace-trick" class="headerlink" title="2. 矩阵微分的运算法则与Trace trick"></a>2. 矩阵微分的运算法则与Trace trick</h4><p>以下的法则需要掌握。当然了，你也可以自己推。</p>
-<p>证明基本上可以在张贤达《矩阵分析与应用》中找到。</p>
-<ul>
-<li><p><strong>微分法则（与标量高度相似）</strong>：</p>
-<ul>
-<li><p>$d(X + Y) = dX + dY$</p>
-</li>
-<li><p>$d(XY) = (dX)Y + X(dY)$ （注意保持矩阵先后顺序，不可交换）</p>
-</li>
-<li><p>$d(X^\top) = (dX)^\top$</p>
-</li>
-<li><p>$d(\text{exp}(X)) = \text{exp}(X) \odot dX$ （$\odot$ 为逐元素乘积）</p>
-</li>
-</ul>
-</li>
-<li><p><strong>Trace的性质</strong>：</p>
-<ul>
-<li><p><strong>循环移位</strong>：$\text{Tr}(ABC) = \text{Tr}(BCA) = \text{Tr}(CAB)$ </p>
-</li>
-<li><p><strong>转置不变</strong>：$\text{Tr}(A) = \text{Tr}(A^\top)$。</p>
-</li>
-<li><p><strong>线性</strong>：$d\text{Tr}(X) = \text{Tr}(dX)$。</p>
-</li>
-<li><p><strong>矩阵乘法/逐元素乘法交换</strong>：$\text{tr}(A^T(B\odot C)) = \text{tr}((A\odot B)^TC)$，其中A, B, C尺寸相同。两侧都等于$\sum_{i,j}A_{ij}B_{ij}C_{ij}$。</p>
-</li>
-</ul>
-</li>
-</ul>
-<h4 id="3-多元-Logistic-的梯度"><a href="#3-多元-Logistic-的梯度" class="headerlink" title="3. 多元 Logistic 的梯度"></a>3. 多元 Logistic 的梯度</h4><p>现在，我们可以很容易地利用上述结论和流程解决多元logistic。</p>
-<p><strong>第一步：化简目标函数</strong></p>
-<p>为了便于求导，利用对数性质将 $l$ 展开：</p>
-
-$$l = -\mathbf{y}^\top \log \text{softmax}(\mathbf{a}) = -\mathbf{y}^\top (\mathbf{a} - \mathbf{1} \ln(\mathbf{1}^\top \exp(\mathbf{a})))$$
-<p>这里 $\mathbf{1}^\top \exp(\mathbf{a})$ 实际上就是 Softmax 的分母部分 $\sum e^{a_j}$。</p>
-<p><strong>第二步：对 $l$ 求微分 $dl$</strong></p>
-
-$$dl = -\mathbf{y}^\top d\mathbf{a} + \mathbf{y}^\top \mathbf{1} \cdot d\ln(\mathbf{1}^\top \exp(\mathbf{a}))$$
-<p>由于 $\mathbf{y}$ 是 One-hot 向量，$\mathbf{y}^\top \mathbf{1} = 1$。再对对数项求微分：</p>
-
-$$dl = -\mathbf{y}^\top d\mathbf{a} + \frac{1}{\mathbf{1}^\top \exp(\mathbf{a})} d(\mathbf{1}^\top \exp(\mathbf{a}))$$
-
-$$dl = -\mathbf{y}^\top d\mathbf{a} + \frac{1}{\mathbf{1}^\top \exp(\mathbf{a})} \mathbf{1}^\top (\exp(\mathbf{a}) \odot d\mathbf{a})$$
-<p>观察发现，$\frac{\exp(\mathbf{a})}{\mathbf{1}^\top \exp(\mathbf{a})}$ 正好是预测概率向量 $\mathbf{p}$。根据向量内积性质，$(\mathbf{p} \odot d\mathbf{a})$ 的各项求和等于 $\mathbf{p}^\top d\mathbf{a}$：</p>
-
-$$dl = -\mathbf{y}^\top d\mathbf{a} + \mathbf{p}^\top d\mathbf{a} = (\mathbf{p} - \mathbf{y})^\top d\mathbf{a}$$
-<p><strong>第三步：代入变量关系锁定 $dW$</strong></p>
-<p>已知 $\mathbf{a} = W\mathbf{x}$，其中 $\mathbf{x}$ 是常数输入，则 $d\mathbf{a} = (dW)\mathbf{x}$。</p>
-<p>代入上式：</p>
-
-$$dl = (\mathbf{p} - \mathbf{y})^\top (dW) \mathbf{x}$$
-<p><strong>第四步：利用迹函数提取梯度</strong></p>
-<p>为了读出梯度，我们将标量 $dl$ 写成迹的形式，并利用 $\text{Tr}(ABC) = \text{Tr}(BCA)$ 变换位置：</p>
-
-$$dl = \text{Tr}( (\mathbf{p} - \mathbf{y})^\top dW \mathbf{x} )$$
-<p>将末尾的 $\mathbf{x}$ 移到最前面：</p>
-
-$$dl = \text{Tr}( \mathbf{x} (\mathbf{p} - \mathbf{y})^\top dW )$$
-<p>为了匹配标准形式 $dl = \text{Tr}(G^\top dW)$，我们需要把 $dW$ 左边的矩阵整体转置：</p>
-
-$$dl = \text{Tr}( ((\mathbf{p} - \mathbf{y})\mathbf{x}^\top)^\top dW )$$
-<p>于是：</p>
-
-$$\frac{\partial l}{\partial W} = (\mathbf{p} - \mathbf{y})\mathbf{x}^\top$$
-<p><br> <br> <br></p>
-<h3 id="三：那么什么是Jacobian-矩阵？"><a href="#三：那么什么是Jacobian-矩阵？" class="headerlink" title="三：那么什么是Jacobian 矩阵？"></a>三：那么什么是Jacobian 矩阵？</h3><p>一般地，数学上利用全微分法可以优雅地解决问题。然而计算机并不擅长处理那些trace trick。所以在 PyTorch （TensorFlow大概也是一样）自动反向传播的底层，实际上，使用的是 Jacobian（雅可比）矩阵。阅读完之后你会发现，这其实并不是一种新的求导方法，只是通过向量化的方法将所有复杂的高维张量通通化成一维，从而形成某种理解维度上的方便。</p>
-<h4 id="1-向量化"><a href="#1-向量化" class="headerlink" title="1. 向量化"></a>1. 向量化</h4><p>对于一个 $m \times n$ 的矩阵 $W$，第一步是将其元素按顺序排列成列向量。</p>
-<ul>
-<li><strong>向量化（Vectorization）</strong>：记作 $\text{vec}(W)$。如果你有一个 $2 \times 2$ 的矩阵，$\text{vec}(W)$ 就是 $4 \times 1$ 向量。</li>
-</ul>
-<h4 id="2-对Kronecker-积的利用（张量积）"><a href="#2-对Kronecker-积的利用（张量积）" class="headerlink" title="2. 对Kronecker 积的利用（张量积）"></a>2. 对Kronecker 积的利用（张量积）</h4><p>当我们要处理类似 $\mathbf{a} = W\mathbf{x}$ 这样的矩阵乘法求导时，数学上有：</p>
-
-$$\text{vec}(AXB) = (B^\top \otimes A)\text{vec}(X)$$
-<p>以$\mathbf{a} = W\mathbf{x}$ 为例。为了套用公式，我们补上单位阵：$\mathbf{a} = I_m W \mathbf{x}$。</p>
-<p>利用上面的公式，它等价于：</p>
-
-$$\mathbf{a} = (\mathbf{x}^\top \otimes I_m) \text{vec}(W)$$
-<p>这意味着，$\mathbf{a}$ 是由 $\text{vec}(W)$ 经过一个系数矩阵 $(\mathbf{x}^\top \otimes I_m)$ 线性变换得到的。</p>
-<h4 id="3-逐步推导"><a href="#3-逐步推导" class="headerlink" title="3. 逐步推导"></a>3. 逐步推导</h4><p>根据向量化的链式法则：</p>
-
-$$\frac{\partial l}{\partial \text{vec}(W)} = \underbrace{\frac{\partial l}{\partial \mathbf{p}}}_{1 \times m} \cdot \underbrace{\frac{\partial \mathbf{p}}{\partial \mathbf{a}}}_{m \times m} \cdot \underbrace{\frac{\partial \mathbf{a}}{\partial \text{vec}(W)}}_{m \times mn}$$
-<p><strong>第一步：求 $\frac{\partial l}{\partial \mathbf{p}}$</strong></p>
-<p>损失函数 $l$ 对预测概率向量 $\mathbf{p}$ 的偏导，根据导数的定义，是一个行向量。这个行向量就是 $l$ 关于 $\mathbf{p}$ 的 Jacobian：</p>
-
-$$J_{l,p} = \left[ -\frac{y_1}{p_1}, -\frac{y_2}{p_2}, \dots, -\frac{y_m}{p_m} \right]$$
-<p><strong>第二步：求 $\frac{\partial \mathbf{p}}{\partial \mathbf{a}}$（Softmax 的雅可比矩阵）</strong></p>
-<p>这里a和p都是向量，所以直接用方法一中的结论。</p>
-<p>结果是一个 $m \times m$ 的矩阵，其形式为 $\text{diag}(\mathbf{p}) - \mathbf{p}\mathbf{p}^\top$。即：</p>
-
-$$J_{p,a} = \begin{bmatrix} p_1(1-p_1) & -p_1 p_2 & \dots & -p_1 p_m \\ -p_2 p_1 & p_2(1-p_2) & \dots & -p_2 p_m \\ \vdots & \vdots & \ddots & \vdots \\ -p_m p_1 & -p_m p_2 & \dots & p_m(1-p_m) \end{bmatrix}$$
-<p><strong>第三步：求 $\frac{\partial \mathbf{a}}{\partial \text{vec}(W)}$</strong></p>
-<p>根据在第 2 点提到的线性转换关系，这一项直接就是那个系数矩阵：</p>
-
-$$\mathbf{x}^\top \otimes I_m$$
-<p>即：</p>
-
-$$J_{a,W} = \frac{\partial \mathbf{a}}{\partial \text{vec}(W)} = \mathbf{x}^\top \otimes I_m$$
-<p>展开来看，就是 $n$ 个 $m \times m$ 的块：</p>
-
-$$J_{a,W} = \begin{bmatrix} x_1 I_m & x_2 I_m & \dots & x_n I_m \end{bmatrix}$$
-<h4 id="4-组合"><a href="#4-组合" class="headerlink" title="4. 组合"></a>4. 组合</h4><p>我们将这几项乘起来。</p>
-
-$$\frac{\partial l}{\partial \text{vec}(W)} = (\mathbf{p} - \mathbf{y})^\top (\mathbf{x}^\top \otimes I_m)$$
-<p>根据矩阵运算规则，这个结果实际上就是：</p>
-
-$$\text{vec}((\mathbf{p} - \mathbf{y})\mathbf{x}^\top)^\top$$
-<p>这是一个 $1 \times mn$ 的行向量。</p>
-<h4 id="5-还原形状（逆向量化）"><a href="#5-还原形状（逆向量化）" class="headerlink" title="5. 还原形状（逆向量化）"></a>5. 还原形状（逆向量化）</h4><p>最后一步，我们将这个 $1 \times mn$ 的长向量重新折叠回 $m \times n$ 的矩阵形状。</p>
-<p>即：</p>
-
-$$\frac{\partial l}{\partial W} = (\mathbf{p} - \mathbf{y})\mathbf{x}^\top$$
-]]></content>
-      <categories>
-        <category>数学</category>
-      </categories>
-      <tags>
-        <tag>机器学习</tag>
-        <tag>数学</tag>
-        <tag>矩阵理论</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>cs336：Assignment1-basics-chapter3</title>
     <url>/Assignment1-basics-chapter3/</url>
     <content><![CDATA[<p>本章带你编写Transformer，并且最后带你简单算一遍内存和FLOPs，但不包括训练和生成（在4-6章）。</p>
@@ -576,6 +360,222 @@ $$y = x + MultiHeadSelfAttention(RMSNorm(x)) \quad (15)$$
         <tag>深度学习</tag>
         <tag>cs336</tag>
         <tag>code</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>矩阵求导理论：几种表示</title>
+    <url>/%E7%9F%A9%E9%98%B5%E6%B1%82%E5%AF%BC/</url>
+    <content><![CDATA[<p><strong>提示：如果latex矩阵的渲染有问题，刷新往往能解决问题</strong><br><br></p>
+<p>也许我们可以说，张量就是矩阵，梯度就是导数，张量的梯度本质上就是矩阵求导的ml小黑话说法。然而由于一些众所周知的原因，很多人甚至在学习线性代数之前就已经走进了深度学习，初次面对高维张量的求导往往感到混乱。而市面上如The Matrix Cookbook等的工具书又往往太细节，翻译也不尽如人意。本文将以最基础的多元 Logistic 回归（Multinomial Logistic Regression）为例，从大方向上探讨三种不同的推导范式。</p>
+<h3 id="例子背景"><a href="#例子背景" class="headerlink" title="例子背景"></a>例子背景</h3><p>我们设定一个典型的分类场景：</p>
+<ul>
+<li><p><strong>输入向量</strong>：$\mathbf{x} \in \mathbb{R}^{n \times 1}$。</p>
+</li>
+<li><p><strong>权重矩阵</strong>：$W \in \mathbb{R}^{m \times n}$。</p>
+</li>
+<li><p><strong>线性输出</strong>：$\mathbf{a} = W\mathbf{x} \in \mathbb{R}^{m \times 1}$。</p>
+</li>
+<li><p><strong>预测概率</strong>：$\mathbf{p} = \text{softmax}(\mathbf{a}) \in \mathbb{R}^{m \times 1}$，其中第 $i$ 个分量 $p_i = \frac{\exp(a_i)}{\sum_{j=1}^m \exp(a_j)}$。</p>
+</li>
+<li><p><strong>目标标签</strong>：$\mathbf{y} \in \mathbb{R}^{m \times 1}$，是一个 One-hot 向量（仅有一个元素为 1，其余为 0）。</p>
+</li>
+<li><p><strong>损失函数</strong>：标量 $l = -\mathbf{y}^\top \log \mathbf{p} = -\sum_{k=1}^m y_k \ln p_k$。</p>
+</li>
+</ul>
+<p>我们的目标是求出梯度矩阵 $\nabla_W l$（即 $\frac{\partial l}{\partial W}$）。</p>
+<span id="more"></span>
+<p><br> <br> </p>
+<h3 id="方法一：逐项求导"><a href="#方法一：逐项求导" class="headerlink" title="方法一：逐项求导"></a>方法一：逐项求导</h3><p>当然了，只要你会求偏导，肯定就会对世界上所有的矩阵求导，只要确定了定义，就可以对应地求导，因为矩阵本质上是标量的排列。我们通过观察单个权重 $W_{ij}$ 的变动如何影响最终损失 $l$，最后再将规律汇总回矩阵形式。</p>
+<h4 id="1-链式法则"><a href="#1-链式法则" class="headerlink" title="1. 链式法则"></a>1. 链式法则</h4><p>我们的目标是求 $l$ 对 $W_{ij}$（矩阵 $W$ 第 $i$ 行第 $j$ 列的元素）的偏导数。</p>
+<p>根据函数依赖关系：$W_{ij}$ 的变动首先影响线性输出 $a_i$，由于 $a_i$ 是 Softmax 函数的输入，它会进一步影响<strong>所有的</strong>预测概率 $p_k (k=1, \dots, m)$，最后导致损失 $l$ 的变化。</p>
+<p>链式法则展开如下：</p>
+
+$$\frac{\partial l}{\partial W_{ij}} = \sum_{k=1}^m \frac{\partial l}{\partial p_k} \cdot \frac{\partial p_k}{\partial a_i} \cdot \frac{\partial a_i}{\partial W_{ij}}$$
+<h4 id="2-第一阶段：基础项求导"><a href="#2-第一阶段：基础项求导" class="headerlink" title="2. 第一阶段：基础项求导"></a>2. 第一阶段：基础项求导</h4><ul>
+<li><p><strong>计算 $\frac{\partial a_i}{\partial W_{ij}}$</strong>：</p>
+<p>  已知 $a_i = \sum_{t=1}^n W_{it}x_t = W_{i1}x_1 + \dots + W_{ij}x_j + \dots$。</p>
+<p>  对 $W_{ij}$ 求导得：$\frac{\partial a_i}{\partial W_{ij}} = x_j$。</p>
+</li>
+<li><p><strong>计算 $\frac{\partial l}{\partial p_k}$</strong>：</p>
+<p>  已知 $l = -\sum_{k=1}^m y_k \ln p_k$。</p>
+<p>  对 $p_k$ 求导得：$\frac{\partial l}{\partial p_k} = -\frac{y_k}{p_k}$。</p>
+</li>
+</ul>
+<h4 id="3-第二阶段：Softmax-梯度的分类讨论"><a href="#3-第二阶段：Softmax-梯度的分类讨论" class="headerlink" title="3. 第二阶段：Softmax 梯度的分类讨论"></a>3. 第二阶段：Softmax 梯度的分类讨论</h4><p>我们需要计算 $\frac{\partial p_k}{\partial a_i}$。由于 $p_k = \frac{e^{a_k}}{\sum_{j=1}^m e^{a_j}}$，分母包含所有 $a$，因此需要分两种情况：</p>
+<ul>
+<li><p><strong>情况 A：当 $k = i$ 时（输出下标等于求导下标）</strong></p>
+<p>  利用商的求导法则：</p>
+
+$$\frac{\partial p_i}{\partial a_i} = \frac{e^{a_i}(\sum e^a) - e^{a_i}(e^{a_i})}{(\sum e^a)^2} = \frac{e^{a_i}}{\sum e^a} - \left(\frac{e^{a_i}}{\sum e^a}\right)^2 = p_i(1 - p_i)$$
+</li>
+<li><p><strong>情况 B：当 $k \neq i$ 时（输出下标不等于求导下标）</strong></p>
+
+$$\frac{\partial p_k}{\partial a_i} = \frac{0 \cdot (\sum e^a) - e^{a_k}(e^{a_i})}{(\sum e^a)^2} = -\frac{e^{a_k}}{\sum e^a} \cdot \frac{e^{a_i}}{\sum e^a} = -p_k p_i$$
+</li>
+</ul>
+<h4 id="4-第三阶段：组合求和"><a href="#4-第三阶段：组合求和" class="headerlink" title="4. 第三阶段：组合求和"></a>4. 第三阶段：组合求和</h4><p>将上述结果代入第一步的链式法则总式中，并将求和号按照 $k=i$ 和 $k \neq i$ 进行拆解：</p>
+
+$$\frac{\partial l}{\partial W_{ij}} = \left( \sum_{k \neq i} \frac{\partial l}{\partial p_k} \frac{\partial p_k}{\partial a_i} + \frac{\partial l}{\partial p_i} \frac{\partial p_i}{\partial a_i} \right) \cdot \frac{\partial a_i}{\partial W_{ij}}$$
+<p>代入具体的偏导表达式：</p>
+
+$$\frac{\partial l}{\partial W_{ij}} = \left( \sum_{k \neq i} \left(-\frac{y_k}{p_k}\right)(-p_k p_i) + \left(-\frac{y_i}{p_i}\right)p_i(1-p_i) \right) \cdot x_j$$
+<p>简化括号内的各项：</p>
+<ul>
+<li><p>第一部分：$\sum_{k \neq i} y_k p_i$</p>
+</li>
+<li><p>第二部分：$-y_i(1 - p_i) = -y_i + y_i p_i$</p>
+</li>
+</ul>
+<p>组合后得到：</p>
+
+$$\frac{\partial l}{\partial W_{ij}} = \left( \sum_{k \neq i} y_k p_i + y_i p_i - y_i \right) x_j$$
+
+$$\frac{\partial l}{\partial W_{ij}} = \left( p_i \left( \sum_{k=1}^m y_k \right) - y_i \right) x_j$$
+<p>由于标签向量 $\mathbf{y}$ 是 One-hot 的，满足 $\sum_{k=1}^m y_k = 1$，上式最终简化为：</p>
+
+$$\frac{\partial l}{\partial W_{ij}} = (p_i - y_i)x_j$$
+<h4 id="5-还原为矩阵形式"><a href="#5-还原为矩阵形式" class="headerlink" title="5. 还原为矩阵形式"></a>5. 还原为矩阵形式</h4><p>我们求出了梯度矩阵中每一个元素 $(i, j)$ 的值。观察发现，这正好对应向量 $(\mathbf{p}-\mathbf{y})$ 的第 $i$ 个元素与向量 $\mathbf{x}$ 的第 $j$ 个元素的乘积。</p>
+<p>于是结果为：</p>
+
+$$\frac{\partial l}{\partial W} = (\mathbf{p} - \mathbf{y})\mathbf{x}^\top$$
+<p><br> <br> <br></p>
+<h3 id="方法二：利用全微分"><a href="#方法二：利用全微分" class="headerlink" title="方法二：利用全微分"></a>方法二：利用全微分</h3><p>你都用矩阵了，为什么还要逐项求导呢？矩阵就是矩阵，矩阵是不能不和标量切割的。下面我们将会看到，将矩阵整体不加拆分地求导有一些很美好的性质。实践上，整体的矩阵求导也使我们更少地受维度匹配问题的侵扰，理解上也更为简洁与直觉。</p>
+<h4 id="1-整体流程"><a href="#1-整体流程" class="headerlink" title="1. 整体流程"></a>1. 整体流程</h4><p>在标量微积分中，我们知道 $df = f’(x)dx$。全微分法将这一思想推广到矩阵：对于一个以矩阵 $X$ 为自变量的标量函数 $f(X)$，其全微分一定可以表示为如下标准形式：</p>
+
+$$df = \sum_{i,j} \frac{\partial f}{\partial X_{ij}} dX_{ij}$$
+<p>为了避免陷入下标求和的泥潭，我们利用迹函数（Trace）。两个同维矩阵 $A$ 和 $B$ 的内积（对应元素相乘再求和）可以写成 $\text{Tr}(A^\top B)$是常用而易得的结论。因此，上述微分式可以写成：</p>
+
+$$df = \text{Tr}(G^\top dX)$$
+<p>这里， $G$ 就是梯度矩阵 $\frac{\partial f}{\partial X}$； dX的定义你可以显然地看出。</p>
+<p><strong>全微分法的标准操作流程如下：</strong></p>
+<ol>
+<li><p><strong>写出微分式</strong>：利用微分运算法则，对目标标量 $l$ 直接求微分 $dl$。</p>
+</li>
+<li><p><strong>套入迹函数</strong>：将 $dl$ 放入迹中，即 $dl = \text{Tr}(dl)$（因为标量的迹等于自身）。</p>
+</li>
+<li><p><strong>应用Trace Trick</strong>：利用迹函数的循环复用性 $\text{Tr}(ABC) = \text{Tr}(BCA)$，通过左右挪动，将所有的 $dX$（或 $dW$）变动项孤立到式子的最右端。</p>
+</li>
+<li><p><strong>读取梯度</strong>：将式子整理成 $dl = \text{Tr}(G^\top dW)$ 的标准形态，直接读出 $G$。</p>
+</li>
+</ol>
+<h4 id="2-矩阵微分的运算法则与Trace-trick"><a href="#2-矩阵微分的运算法则与Trace-trick" class="headerlink" title="2. 矩阵微分的运算法则与Trace trick"></a>2. 矩阵微分的运算法则与Trace trick</h4><p>以下的法则需要掌握。当然了，你也可以自己推。</p>
+<p>证明基本上可以在张贤达《矩阵分析与应用》中找到。</p>
+<ul>
+<li><p><strong>微分法则（与标量高度相似）</strong>：</p>
+<ul>
+<li><p>$d(X + Y) = dX + dY$</p>
+</li>
+<li><p>$d(XY) = (dX)Y + X(dY)$ （注意保持矩阵先后顺序，不可交换）</p>
+</li>
+<li><p>$d(X^\top) = (dX)^\top$</p>
+</li>
+<li><p>$d(\text{exp}(X)) = \text{exp}(X) \odot dX$ （$\odot$ 为逐元素乘积）</p>
+</li>
+</ul>
+</li>
+<li><p><strong>Trace的性质</strong>：</p>
+<ul>
+<li><p><strong>循环移位</strong>：$\text{Tr}(ABC) = \text{Tr}(BCA) = \text{Tr}(CAB)$ </p>
+</li>
+<li><p><strong>转置不变</strong>：$\text{Tr}(A) = \text{Tr}(A^\top)$。</p>
+</li>
+<li><p><strong>线性</strong>：$d\text{Tr}(X) = \text{Tr}(dX)$。</p>
+</li>
+<li><p><strong>矩阵乘法/逐元素乘法交换</strong>：$\text{tr}(A^T(B\odot C)) = \text{tr}((A\odot B)^TC)$，其中A, B, C尺寸相同。两侧都等于$\sum_{i,j}A_{ij}B_{ij}C_{ij}$。</p>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="3-多元-Logistic-的梯度"><a href="#3-多元-Logistic-的梯度" class="headerlink" title="3. 多元 Logistic 的梯度"></a>3. 多元 Logistic 的梯度</h4><p>现在，我们可以很容易地利用上述结论和流程解决多元logistic。</p>
+<p><strong>第一步：化简目标函数</strong></p>
+<p>为了便于求导，利用对数性质将 $l$ 展开：</p>
+
+$$l = -\mathbf{y}^\top \log \text{softmax}(\mathbf{a}) = -\mathbf{y}^\top (\mathbf{a} - \mathbf{1} \ln(\mathbf{1}^\top \exp(\mathbf{a})))$$
+<p>这里 $\mathbf{1}^\top \exp(\mathbf{a})$ 实际上就是 Softmax 的分母部分 $\sum e^{a_j}$。</p>
+<p><strong>第二步：对 $l$ 求微分 $dl$</strong></p>
+
+$$dl = -\mathbf{y}^\top d\mathbf{a} + \mathbf{y}^\top \mathbf{1} \cdot d\ln(\mathbf{1}^\top \exp(\mathbf{a}))$$
+<p>由于 $\mathbf{y}$ 是 One-hot 向量，$\mathbf{y}^\top \mathbf{1} = 1$。再对对数项求微分：</p>
+
+$$dl = -\mathbf{y}^\top d\mathbf{a} + \frac{1}{\mathbf{1}^\top \exp(\mathbf{a})} d(\mathbf{1}^\top \exp(\mathbf{a}))$$
+
+$$dl = -\mathbf{y}^\top d\mathbf{a} + \frac{1}{\mathbf{1}^\top \exp(\mathbf{a})} \mathbf{1}^\top (\exp(\mathbf{a}) \odot d\mathbf{a})$$
+<p>观察发现，$\frac{\exp(\mathbf{a})}{\mathbf{1}^\top \exp(\mathbf{a})}$ 正好是预测概率向量 $\mathbf{p}$。根据向量内积性质，$(\mathbf{p} \odot d\mathbf{a})$ 的各项求和等于 $\mathbf{p}^\top d\mathbf{a}$：</p>
+
+$$dl = -\mathbf{y}^\top d\mathbf{a} + \mathbf{p}^\top d\mathbf{a} = (\mathbf{p} - \mathbf{y})^\top d\mathbf{a}$$
+<p><strong>第三步：代入变量关系锁定 $dW$</strong></p>
+<p>已知 $\mathbf{a} = W\mathbf{x}$，其中 $\mathbf{x}$ 是常数输入，则 $d\mathbf{a} = (dW)\mathbf{x}$。</p>
+<p>代入上式：</p>
+
+$$dl = (\mathbf{p} - \mathbf{y})^\top (dW) \mathbf{x}$$
+<p><strong>第四步：利用迹函数提取梯度</strong></p>
+<p>为了读出梯度，我们将标量 $dl$ 写成迹的形式，并利用 $\text{Tr}(ABC) = \text{Tr}(BCA)$ 变换位置：</p>
+
+$$dl = \text{Tr}( (\mathbf{p} - \mathbf{y})^\top dW \mathbf{x} )$$
+<p>将末尾的 $\mathbf{x}$ 移到最前面：</p>
+
+$$dl = \text{Tr}( \mathbf{x} (\mathbf{p} - \mathbf{y})^\top dW )$$
+<p>为了匹配标准形式 $dl = \text{Tr}(G^\top dW)$，我们需要把 $dW$ 左边的矩阵整体转置：</p>
+
+$$dl = \text{Tr}( ((\mathbf{p} - \mathbf{y})\mathbf{x}^\top)^\top dW )$$
+<p>于是：</p>
+
+$$\frac{\partial l}{\partial W} = (\mathbf{p} - \mathbf{y})\mathbf{x}^\top$$
+<p><br> <br> <br></p>
+<h3 id="三：什么是Jacobian-矩阵？"><a href="#三：什么是Jacobian-矩阵？" class="headerlink" title="三：什么是Jacobian 矩阵？"></a>三：什么是Jacobian 矩阵？</h3><p>一般地，数学上利用全微分法可以优雅地解决问题。然而计算机并不擅长处理那些trace trick。所以在 PyTorch （TensorFlow大概也是一样）自动反向传播的底层，实际上，使用的是 Jacobian（雅可比）矩阵。阅读完之后你会发现，这其实并不是一种新的求导方法，只是通过向量化的方法将所有复杂的高维张量通通化成一维，从而形成某种理解维度上的方便。</p>
+<h4 id="1-向量化"><a href="#1-向量化" class="headerlink" title="1. 向量化"></a>1. 向量化</h4><p>对于一个 $m \times n$ 的矩阵 $W$，第一步是将其元素按顺序排列成列向量。</p>
+<ul>
+<li><strong>向量化（Vectorization）</strong>：记作 $\text{vec}(W)$。如果你有一个 $2 \times 2$ 的矩阵，$\text{vec}(W)$ 就是 $4 \times 1$ 向量。</li>
+</ul>
+<h4 id="2-对Kronecker-积的利用（张量积）"><a href="#2-对Kronecker-积的利用（张量积）" class="headerlink" title="2. 对Kronecker 积的利用（张量积）"></a>2. 对Kronecker 积的利用（张量积）</h4><p>当我们要处理类似 $\mathbf{a} = W\mathbf{x}$ 这样的矩阵乘法求导时，数学上有：</p>
+
+$$\text{vec}(AXB) = (B^\top \otimes A)\text{vec}(X)$$
+<p>以$\mathbf{a} = W\mathbf{x}$ 为例。为了套用公式，我们补上单位阵：$\mathbf{a} = I_m W \mathbf{x}$。</p>
+<p>利用上面的公式，它等价于：</p>
+
+$$\mathbf{a} = (\mathbf{x}^\top \otimes I_m) \text{vec}(W)$$
+<p>这意味着，$\mathbf{a}$ 是由 $\text{vec}(W)$ 经过一个系数矩阵 $(\mathbf{x}^\top \otimes I_m)$ 线性变换得到的。</p>
+<h4 id="3-逐步推导"><a href="#3-逐步推导" class="headerlink" title="3. 逐步推导"></a>3. 逐步推导</h4><p>根据向量化的链式法则：</p>
+
+$$\frac{\partial l}{\partial \text{vec}(W)} = \underbrace{\frac{\partial l}{\partial \mathbf{p}}}_{1 \times m} \cdot \underbrace{\frac{\partial \mathbf{p}}{\partial \mathbf{a}}}_{m \times m} \cdot \underbrace{\frac{\partial \mathbf{a}}{\partial \text{vec}(W)}}_{m \times mn}$$
+<p><strong>第一步：求 $\frac{\partial l}{\partial \mathbf{p}}$</strong></p>
+<p>损失函数 $l$ 对预测概率向量 $\mathbf{p}$ 的偏导，根据导数的定义，是一个行向量。这个行向量就是 $l$ 关于 $\mathbf{p}$ 的 Jacobian：</p>
+
+$$J_{l,p} = \left[ -\frac{y_1}{p_1}, -\frac{y_2}{p_2}, \dots, -\frac{y_m}{p_m} \right]$$
+<p><strong>第二步：求 $\frac{\partial \mathbf{p}}{\partial \mathbf{a}}$（Softmax 的雅可比矩阵）</strong></p>
+<p>这里a和p都是向量，所以直接用方法一中的结论。</p>
+<p>结果是一个 $m \times m$ 的矩阵，其形式为 $\text{diag}(\mathbf{p}) - \mathbf{p}\mathbf{p}^\top$。即：</p>
+
+$$J_{p,a} = \begin{bmatrix} p_1(1-p_1) & -p_1 p_2 & \dots & -p_1 p_m \\ -p_2 p_1 & p_2(1-p_2) & \dots & -p_2 p_m \\ \vdots & \vdots & \ddots & \vdots \\ -p_m p_1 & -p_m p_2 & \dots & p_m(1-p_m) \end{bmatrix}$$
+<p><strong>第三步：求 $\frac{\partial \mathbf{a}}{\partial \text{vec}(W)}$</strong></p>
+<p>根据在第 2 点提到的线性转换关系，这一项直接就是那个系数矩阵：</p>
+
+$$\mathbf{x}^\top \otimes I_m$$
+<p>即：</p>
+
+$$J_{a,W} = \frac{\partial \mathbf{a}}{\partial \text{vec}(W)} = \mathbf{x}^\top \otimes I_m$$
+<p>展开来看，就是 $n$ 个 $m \times m$ 的块：</p>
+
+$$J_{a,W} = \begin{bmatrix} x_1 I_m & x_2 I_m & \dots & x_n I_m \end{bmatrix}$$
+<h4 id="4-组合"><a href="#4-组合" class="headerlink" title="4. 组合"></a>4. 组合</h4><p>我们将这几项乘起来。</p>
+
+$$\frac{\partial l}{\partial \text{vec}(W)} = (\mathbf{p} - \mathbf{y})^\top (\mathbf{x}^\top \otimes I_m)$$
+<p>根据矩阵运算规则，这个结果实际上就是：</p>
+
+$$\text{vec}((\mathbf{p} - \mathbf{y})\mathbf{x}^\top)^\top$$
+<p>这是一个 $1 \times mn$ 的行向量。</p>
+<h4 id="5-还原形状（逆向量化）"><a href="#5-还原形状（逆向量化）" class="headerlink" title="5. 还原形状（逆向量化）"></a>5. 还原形状（逆向量化）</h4><p>最后一步，我们将这个 $1 \times mn$ 的长向量重新折叠回 $m \times n$ 的矩阵形状。</p>
+<p>即：</p>
+
+$$\frac{\partial l}{\partial W} = (\mathbf{p} - \mathbf{y})\mathbf{x}^\top$$
+]]></content>
+      <categories>
+        <category>数学</category>
+      </categories>
+      <tags>
+        <tag>机器学习</tag>
+        <tag>数学</tag>
+        <tag>矩阵理论</tag>
       </tags>
   </entry>
 </search>
