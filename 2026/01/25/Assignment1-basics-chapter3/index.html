@@ -32,7 +32,7 @@
 <meta property="og:image" content="http://example.com/2026/01/25/Assignment1-basics-chapter3/images/image.png">
 <meta property="og:image" content="http://example.com/2026/01/25/Assignment1-basics-chapter3/images/image-2.png">
 <meta property="article:published_time" content="2026-01-25T14:15:15.000Z">
-<meta property="article:modified_time" content="2026-02-05T07:16:29.857Z">
+<meta property="article:modified_time" content="2026-02-05T07:19:19.919Z">
 <meta property="article:author" content="Zian Wang">
 <meta property="article:tag" content="机器学习">
 <meta property="article:tag" content="深度学习">
@@ -298,7 +298,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">Edited on</span>
-      <time title="Modified: 2026-02-05 15:16:29" itemprop="dateModified" datetime="2026-02-05T15:16:29+08:00">2026-02-05</time>
+      <time title="Modified: 2026-02-05 15:19:19" itemprop="dateModified" datetime="2026-02-05T15:19:19+08:00">2026-02-05</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -339,7 +339,7 @@
 <p>如果你熟悉相关算法，chapter3和接下来的章节要比chapter2简单得多。你大可以vibecode softmax之类你非常熟悉的任务，在数个小时内完成ch.3。  </p>
 <h1 id="3-Transformer-架构"><a href="#3-Transformer-架构" class="headerlink" title="3  Transformer 架构"></a>3  Transformer 架构</h1><p>一个语言模型（LM）接受一批整数token ID序列作为输入（即，形状为<code>(batch_size, sequence_length)</code> 的 <code>torch.Tensor</code>），并返回词表上的（批量）归一化概率分布（即形状为 <code>(batch_size, sequence_length, vocab_size)</code> 的 PyTorch 张量），其中预测的分布是针对每个输入 token 的下一个词的（即，对词典里的每一个词得到一个score）。<br>在训练语言模型（training）时，我们使用这些下文预测来计算实际下一个词与预测下一个词之间的交叉熵损失。  （然后通过反向传播减小这些损失）<br>在推理过程中利用语言模型生成文本（validation/testing）时，我们取最后一个时间步（即序列中的最后一项）预测的下文概率分布来生成序列中的下一个 token（例如，通过选取概率最高的 token、从分布中采样等），将这个 token 添加到输入序列中，并重复此过程。<br>这一部分的作业中，你将从零开始构建这个模型。我们将先从模型的高层描述开始，然后逐步介绍各个组件。<br><span id="more"></span></p>
 <h2 id="3-1-Transformer-语言模型（LM）"><a href="#3-1-Transformer-语言模型（LM）" class="headerlink" title="3.1 Transformer 语言模型（LM）"></a>3.1 Transformer 语言模型（LM）</h2><p>给定一个 token ID 序列，Transformer 语言模型使用输入嵌入（input embedding，通过它将离散的整数ID映射到高维连续空间，转换成稠密向量），将嵌入后的 token 通过 <code>num_layers</code> 个 Transformer 块，然后应用一个学习到的线性投影（“输出嵌入”或“LM head”）来产生预测的下一 token 的未归一化的得分（logits）。<br>示意图请参见图 1。  </p>
-<h3 id="Figure-1"><a href="#Figure-1" class="headerlink" title="Figure 1"></a>Figure 1</h3><p><img src="images/image.png" alt="|324x370"></p>
+<h3 id="Figure-1"><a href="#Figure-1" class="headerlink" title="Figure 1"></a>Figure 1</h3><p><img src="./images/image.png" alt="|324x370"></p>
 <h3 id="3-1-1-Token-嵌入"><a href="#3-1-1-Token-嵌入" class="headerlink" title="3.1.1 Token 嵌入"></a>3.1.1 Token 嵌入</h3><p>第一步，Transformer 将（批量的）token ID 序列嵌入为包含 token 身份信息的向量序列（图 1 中的红色块）。</p>
 <p>具体来说，给定一个 token ID 序列，Transformer 语言模型使用一个 token 嵌入层来生成一个向量序列。每个嵌入层接收一个形状为 <code>(batch_size, sequence_length)</code> 的整数张量，并产生一个形状为 <code>(batch_size, sequence_length, d_model)</code> 的向量序列。(也即，把每个数字索引变成一个长度为<code>d_model</code>的向量。)</p>
 <h3 id="3-1-2-Pre-norm-Transformer-块"><a href="#3-1-2-Pre-norm-Transformer-块" class="headerlink" title="3.1.2 Pre-norm Transformer 块"></a>3.1.2 Pre-norm Transformer 块</h3><p>嵌入之后，激活值由几个结构相同的神经网络处理。一个标准的纯解码器（decoder-only）Transformer 语言模型由 <code>num_layers</code> 个相同的层（通常称为 Transformer “块（blocks）”）组成。每个 Transformer 块接收形状为 <code>(batch_size, sequence_length, d_model)</code> 的输入，并返回形状为 <code>(batch_size, sequence_length, d_model)</code> 的输出。每个块通过自注意力机制（self-attention）聚合整个序列的信息，并通过前馈层（feed-forward layers）对其进行非线性转换。</p>
@@ -400,7 +400,7 @@ $$y = Wx. \quad (3)$$
 <h5 id="Answer：-1"><a href="#Answer：-1" class="headerlink" title="Answer："></a>Answer：</h5><p>见transformer_model.Embedding和adapter.run_embedding。</p>
 <h2 id="3-5-Pre-Norm-Transformer-块"><a href="#3-5-Pre-Norm-Transformer-块" class="headerlink" title="3.5 Pre-Norm Transformer 块"></a>3.5 Pre-Norm Transformer 块</h2><p>每个 Transformer 块有两个子层：多头自注意力机制和位置级前馈网络 (Vaswani et al., 2017, section 3.1)。</p>
 <p>在原始的 Transformer 论文中，模型在两个子层周围各使用了一个残差连接，随后进行层归一化（layer normalization）。这种架构通常被称为“post-norm” Transformer，因为层归一化被应用于子层的输出。<br>然而，多项研究发现，将层归一化从每个子层的输出移动到每个子层的输入（并在最后一个 Transformer 块之后增加一个额外的层归一化）可以提高 Transformer 训练的稳定性 [Nguyen and Salazar, 2019, Xiong et al., 2020] —— 参见图 2 了解这种“pre-norm” Transformer 块的视觉表示。随后，每个 Transformer 块子层的输出通过残差连接加到子层输入上 (Vaswani et al., 2017, section 5.4)。pre-norm 的一种直觉是，从输入嵌入到 Transformer 的最终输出之间存在一条没有经过任何归一化的清晰“残差流”，据称这可以改善梯度流动。这种 pre-norm Transformer 现在已成为当今语言模型（例如 GPT-3, LLaMA, PaLM 等）使用的标准，因此我们将实现这一变体。我们将逐一介绍 pre-norm Transformer 块的每个组件，并按顺序实现它们。  </p>
-<h3 id="Figure-2"><a href="#Figure-2" class="headerlink" title="Figure 2"></a>Figure 2</h3><p><img src="images/image-2.png" alt="|324x438"></p>
+<h3 id="Figure-2"><a href="#Figure-2" class="headerlink" title="Figure 2"></a>Figure 2</h3><p><img src="./images/image-2.png" alt="|324x438"></p>
 <h3 id="3-5-1-均方根层归一化-Layer-Normalization"><a href="#3-5-1-均方根层归一化-Layer-Normalization" class="headerlink" title="3.5.1 均方根层归一化 (Layer Normalization)"></a>3.5.1 均方根层归一化 (Layer Normalization)</h3><p>Vaswani et al. [2017] 的原始 Transformer 实现使用层归一化 [Ba et al., 2016] 来归一化激活值。参考 Touvron et al. [2023]，我们将使用均方根层归一化 (RMSNorm; Zhang and Sennrich, 2019, equation 4) 进行层归一化。给定一个激活值向量 $a \in \mathbb{R}^{d_{model}}$，RMSNorm 将按如下方式缩放每个激活值 $a_i$：</p>
 
 $$RMSNorm(a_i) = \frac{a_i}{RMS(a)} g_i, \quad (4)$$
