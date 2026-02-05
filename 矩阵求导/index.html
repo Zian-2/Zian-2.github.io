@@ -30,7 +30,7 @@
 <meta property="og:description" content="提示：如果latex矩阵的渲染有问题，刷新往往能解决问题 也许我们可以说，张量就是矩阵，梯度就是导数，张量的梯度本质上就是矩阵求导的ml小黑话说法。然而由于一些众所周知的原因，很多人甚至在学习线性代数之前就已经走进了深度学习，初次面对高维张量的求导往往感到混乱。而市面上如The Matrix Cookbook等的工具书又往往太细节，翻译也不尽如人意。本文将以最基础的多元 Logistic 回归（M">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2026-01-24T14:15:15.000Z">
-<meta property="article:modified_time" content="2026-02-05T08:46:43.999Z">
+<meta property="article:modified_time" content="2026-02-05T08:47:33.864Z">
 <meta property="article:author" content="Zian Wang">
 <meta property="article:tag" content="机器学习">
 <meta property="article:tag" content="数学">
@@ -295,7 +295,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">Edited on</span>
-      <time title="Modified: 2026-02-05 16:46:43" itemprop="dateModified" datetime="2026-02-05T16:46:43+08:00">2026-02-05</time>
+      <time title="Modified: 2026-02-05 16:47:33" itemprop="dateModified" datetime="2026-02-05T16:47:33+08:00">2026-02-05</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -487,7 +487,7 @@ $$dl = \text{Tr}( ((\mathbf{p} - \mathbf{y})\mathbf{x}^\top)^\top dW )$$
 
 $$\frac{\partial l}{\partial W} = (\mathbf{p} - \mathbf{y})\mathbf{x}^\top$$
 <p><br> <br> <br></p>
-<h3 id="三：什么是Jacobian-矩阵？"><a href="#三：什么是Jacobian-矩阵？" class="headerlink" title="三：什么是Jacobian 矩阵？"></a>三：什么是Jacobian 矩阵？</h3><p>一般地，数学上利用全微分法可以优雅地解决问题。然而计算机并不擅长处理那些trace trick。所以在 PyTorch （TensorFlow大概也是一样）自动反向传播的底层，实际上，使用的是 Jacobian（雅可比）矩阵。阅读完之后你会发现，这其实并不是一种新的求导方法，只是通过向量化的方法将所有复杂的高维张量通通化成一维，从而形成某种理解维度上的方便。</p>
+<h3 id="三：什么是Jacobian-矩阵？"><a href="#三：什么是Jacobian-矩阵？" class="headerlink" title="三：什么是Jacobian 矩阵？"></a>三：什么是Jacobian 矩阵？</h3><p>一般地，数学上利用全微分法可以优雅地解决问题。然而计算机并不擅长处理那些trace trick。所以在 PyTorch自动反向传播的底层，实际上，使用的是 Jacobian（雅可比）矩阵。阅读完之后你会发现，这其实并不是一种新的求导方法，只是通过向量化的方法将所有复杂的高维张量通通化成一维，从而形成某种理解维度上的方便。</p>
 <h4 id="1-向量化"><a href="#1-向量化" class="headerlink" title="1. 向量化"></a>1. 向量化</h4><p>对于一个 $m \times n$ 的矩阵 $W$，第一步是将其元素按顺序排列成列向量。</p>
 <ul>
 <li><strong>向量化（Vectorization）</strong>：记作 $\text{vec}(W)$。如果你有一个 $2 \times 2$ 的矩阵，$\text{vec}(W)$ 就是 $4 \times 1$ 向量。</li>
