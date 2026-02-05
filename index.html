@@ -250,7 +250,7 @@
   
 
   <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2026/01/27/tokenizer.py/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2026/01/25/Assignment1-basics-chapter3/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.jpg">
@@ -268,7 +268,7 @@
     </span>
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
-          <a href="/2026/01/27/tokenizer.py/" class="post-title-link" itemprop="url">tokenizer.py</a>
+          <a href="/2026/01/25/Assignment1-basics-chapter3/" class="post-title-link" itemprop="url">cs336：Assignment1-basics-chapter3</a>
         </h2>
 
         <div class="post-meta-container">
@@ -279,224 +279,14 @@
       </span>
       <span class="post-meta-item-text">Posted on</span>
 
-      <time title="Created: 2026-01-27 22:15:15" itemprop="dateCreated datePublished" datetime="2026-01-27T22:15:15+08:00">2026-01-27</time>
+      <time title="Created: 2026-01-25 22:15:15" itemprop="dateCreated datePublished" datetime="2026-01-25T22:15:15+08:00">2026-01-25</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">Edited on</span>
-      <time title="Modified: 2026-01-29 16:39:44" itemprop="dateModified" datetime="2026-01-29T16:39:44+08:00">2026-01-29</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">In</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/cs336/" itemprop="url" rel="index"><span itemprop="name">cs336</span></a>
-        </span>
-    </span>
-
-  
-    <span class="post-meta-item" title="Word count in article">
-      <span class="post-meta-item-icon">
-        <i class="far fa-file-word"></i>
-      </span>
-      <span class="post-meta-item-text">Word count in article: </span>
-      <span>7k</span>
-    </span>
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <p>本文包含对Problem (train_bpe): BPE Tokenizer Training一问的解答及说明。</p>
-<p>完整代码见<a target="_blank" rel="noopener" href="https://github.com/Zian-2/cs336_assignments_and_notes/blob/main/assignment1-basics/cs336_basics/tokenizer.py">https://github.com/Zian-2/cs336_assignments_and_notes/blob/main/assignment1-basics/cs336_basics/tokenizer.py</a></p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> os</span><br><span class="line"><span class="keyword">from</span> collections <span class="keyword">import</span> Counter</span><br><span class="line"><span class="keyword">import</span> regex <span class="keyword">as</span> re</span><br><span class="line"><span class="keyword">import</span> multiprocessing</span><br><span class="line"><span class="keyword">from</span> .pretokenization_example <span class="keyword">import</span> find_chunk_boundaries</span><br></pre></td></tr></table></figure>
-<p>Counter : 一种特殊的数据类型，本质上是字典，下面你会看到它在计数层面上会有一些方便。<br>regex：引入正则表达式<br>multiprocessing: 用于并行处理</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 预编译正则表达式</span></span><br><span class="line">PAT = re.<span class="built_in">compile</span>(<span class="string">r&quot;&quot;&quot;&#x27;(?:[sdmt]|ll|ve|re)| ?\p&#123;L&#125;+| ?\p&#123;N&#125;+| ?[^\s\p&#123;L&#125;\p&#123;N&#125;]+|\s+(?!\S)|\s+&quot;&quot;&quot;</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">pre_tokenization</span>(<span class="params">chunk,special_tokens</span>)-&gt;<span class="built_in">list</span>[<span class="built_in">str</span>]:</span><br><span class="line">        <span class="comment"># 预分词：先从special_token切开，再过一遍正则切成单词</span></span><br><span class="line">        result = []</span><br><span class="line">        <span class="comment"># 切割special_tokens</span></span><br><span class="line">        special_pat = <span class="string">&quot;(&quot;</span> + <span class="string">&quot;|&quot;</span>.join(re.escape(t) <span class="keyword">for</span> t <span class="keyword">in</span> special_tokens) + <span class="string">&quot;)&quot;</span></span><br><span class="line">        parts = re.split(special_pat, chunk)</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">for</span> part <span class="keyword">in</span> parts:</span><br><span class="line">            <span class="keyword">if</span> <span class="keyword">not</span> part:</span><br><span class="line">                <span class="keyword">continue</span></span><br><span class="line">            <span class="keyword">if</span> part <span class="keyword">in</span> special_tokens:</span><br><span class="line">                <span class="keyword">continue</span></span><br><span class="line"></span><br><span class="line">            <span class="comment"># 预分词</span></span><br><span class="line">            matches = PAT.finditer(part)</span><br><span class="line">            <span class="keyword">for</span> m <span class="keyword">in</span> matches:</span><br><span class="line">                result.append(<span class="string">f&quot;<span class="subst">&#123;m.group()&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> result</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-<p>五个部分分别处理：缩写后缀（’ll, ‘ve, ‘t , ‘s等）；连续字母（单词）；连续数字；连续标点符号；连续纯空格。<br>正则表达式的编译是比较昂贵的，放在外面从而不用每次都编译一遍。<br>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2026/01/27/tokenizer.py/#more" rel="contents">
-                Read more &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2026/01/24/Assignment1-basics-chapter1&2/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.jpg">
-      <meta itemprop="name" content="Zian Wang">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Homepage">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content=" | Homepage">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2026/01/24/Assignment1-basics-chapter1&2/" class="post-title-link" itemprop="url">cs336：Assignment1-basics-chapter1&2</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">Posted on</span>
-
-      <time title="Created: 2026-01-24 22:15:15" itemprop="dateCreated datePublished" datetime="2026-01-24T22:15:15+08:00">2026-01-24</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">Edited on</span>
-      <time title="Modified: 2026-02-02 21:09:06" itemprop="dateModified" datetime="2026-02-02T21:09:06+08:00">2026-02-02</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">In</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/cs336/" itemprop="url" rel="index"><span itemprop="name">cs336</span></a>
-        </span>
-    </span>
-
-  
-    <span class="post-meta-item" title="Word count in article">
-      <span class="post-meta-item-icon">
-        <i class="far fa-file-word"></i>
-      </span>
-      <span class="post-meta-item-text">Word count in article: </span>
-      <span>21k</span>
-    </span>
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <p>本文为cs336的assignment1中分词器对应章节的参考解答和课程笔记。   </p>
-<p>1 本文范围内的作业暂时还不需要用到GPU<br>2 本课程并未提供好系统适配，所以事实上不推荐在win上完成作业。在你的服务器or虚拟机上完成可以避免很多麻烦。</p>
-<h1 id="Setup："><a href="#Setup：" class="headerlink" title="Setup："></a>Setup：</h1><h2 id="环境配置："><a href="#环境配置：" class="headerlink" title="环境配置："></a>环境配置：</h2><p>按照<a target="_blank" rel="noopener" href="https://github.com/stanford-cs336/assignment1-basics/tree/main">https://github.com/stanford-cs336/assignment1-basics/tree/main</a> 中README的说明配置并测试uv。  </p>
-<p>如果你在Windows下，uv run pytest 时会出现问题，因为你没有办法import resource。<br>进行如下操作：<br>打开\assignment1-basics\tests\test_tokenizer.py， 删除第5行的import resource，或修改：  </p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">try</span>:</span><br><span class="line">    <span class="keyword">import</span> resource</span><br><span class="line"><span class="keyword">except</span> ImportError:</span><br><span class="line">    resource = <span class="literal">None</span></span><br></pre></td></tr></table></figure>
-<p>然后重新uv run pytest。  </p>
-<h2 id="数据下载："><a href="#数据下载：" class="headerlink" title="数据下载："></a>数据下载：</h2><p>下载 TinyStories data 和 subsample of OpenWebText：<br>课程原生使用的是wget； windows下，推荐使用curl。试着使用如下命令：<br><figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 创建并进入数据目录</span></span><br><span class="line">mkdir <span class="literal">-p</span> <span class="keyword">data</span></span><br><span class="line"><span class="built_in">cd</span> <span class="keyword">data</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 下载 TinyStories</span></span><br><span class="line">curl.exe <span class="literal">-L</span> <span class="literal">-o</span> TinyStoriesV2<span class="literal">-GPT4-train</span>.txt https://huggingface.co/datasets/roneneldan/TinyStories/resolve/main/TinyStoriesV2<span class="literal">-GPT4-train</span>.txt</span><br><span class="line">curl.exe <span class="literal">-L</span> <span class="literal">-o</span> TinyStoriesV2<span class="literal">-GPT4-valid</span>.txt https://huggingface.co/datasets/roneneldan/TinyStories/resolve/main/TinyStoriesV2<span class="literal">-GPT4-valid</span>.txt</span><br><span class="line"></span><br><span class="line"><span class="comment"># 下载 OpenWebText</span></span><br><span class="line">curl.exe <span class="literal">-L</span> <span class="literal">-o</span> owt_train.txt.gz https://huggingface.co/datasets/stanford<span class="literal">-cs336</span>/owt<span class="literal">-sample</span>/resolve/main/owt_train.txt.gz</span><br><span class="line">curl.exe <span class="literal">-L</span> <span class="literal">-o</span> owt_valid.txt.gz https://huggingface.co/datasets/stanford<span class="literal">-cs336</span>/owt<span class="literal">-sample</span>/resolve/main/owt_valid.txt.gz</span><br><span class="line"></span><br><span class="line"><span class="comment"># 解压 .gz 文件</span></span><br><span class="line"><span class="comment"># Windows 10/11 自带 tar.exe，可以替代 gunzip</span></span><br><span class="line">tar.exe <span class="literal">-xvzf</span> owt_train.txt.gz</span><br><span class="line">tar.exe <span class="literal">-xvzf</span> owt_valid.txt.gz</span><br><span class="line"></span><br><span class="line"><span class="built_in">cd</span> ..</span><br></pre></td></tr></table></figure></p>
-<p>如果解压不成功，考虑使用python原生解压。<br>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2026/01/24/Assignment1-basics-chapter1&2/#more" rel="contents">
-                Read more &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2026/01/24/Assignment1-basics-chapter3/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.jpg">
-      <meta itemprop="name" content="Zian Wang">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Homepage">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content=" | Homepage">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2026/01/24/Assignment1-basics-chapter3/" class="post-title-link" itemprop="url">cs336：Assignment1-basics-chapter3</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">Posted on</span>
-
-      <time title="Created: 2026-01-24 22:15:15" itemprop="dateCreated datePublished" datetime="2026-01-24T22:15:15+08:00">2026-01-24</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">Edited on</span>
-      <time title="Modified: 2026-02-05 14:39:52" itemprop="dateModified" datetime="2026-02-05T14:39:52+08:00">2026-02-05</time>
+      <time title="Modified: 2026-02-05 14:52:23" itemprop="dateModified" datetime="2026-02-05T14:52:23+08:00">2026-02-05</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -746,7 +536,7 @@ $$y = x + MultiHeadSelfAttention(RMSNorm(x)) \quad (15)$$
   
 
   <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2026/01/21/%E7%9F%A9%E9%98%B5%E6%B1%82%E5%AF%BC/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2026/01/24/%E7%9F%A9%E9%98%B5%E6%B1%82%E5%AF%BC/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.jpg">
@@ -764,7 +554,7 @@ $$y = x + MultiHeadSelfAttention(RMSNorm(x)) \quad (15)$$
     </span>
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
-          <a href="/2026/01/21/%E7%9F%A9%E9%98%B5%E6%B1%82%E5%AF%BC/" class="post-title-link" itemprop="url">矩阵求导理论：几种表示</a>
+          <a href="/2026/01/24/%E7%9F%A9%E9%98%B5%E6%B1%82%E5%AF%BC/" class="post-title-link" itemprop="url">矩阵求导理论：几种表示</a>
         </h2>
 
         <div class="post-meta-container">
@@ -775,14 +565,14 @@ $$y = x + MultiHeadSelfAttention(RMSNorm(x)) \quad (15)$$
       </span>
       <span class="post-meta-item-text">Posted on</span>
 
-      <time title="Created: 2026-01-21 22:15:15" itemprop="dateCreated datePublished" datetime="2026-01-21T22:15:15+08:00">2026-01-21</time>
+      <time title="Created: 2026-01-24 22:15:15" itemprop="dateCreated datePublished" datetime="2026-01-24T22:15:15+08:00">2026-01-24</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">Edited on</span>
-      <time title="Modified: 2026-01-24 18:49:15" itemprop="dateModified" datetime="2026-01-24T18:49:15+08:00">2026-01-24</time>
+      <time title="Modified: 2026-02-05 14:52:41" itemprop="dateModified" datetime="2026-02-05T14:52:41+08:00">2026-02-05</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -831,7 +621,217 @@ $$y = x + MultiHeadSelfAttention(RMSNorm(x)) \quad (15)$$
 <p>我们的目标是求出梯度矩阵 $\nabla_W l$（即 $\frac{\partial l}{\partial W}$）。</p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2026/01/21/%E7%9F%A9%E9%98%B5%E6%B1%82%E5%AF%BC/#more" rel="contents">
+              <a class="btn" href="/2026/01/24/%E7%9F%A9%E9%98%B5%E6%B1%82%E5%AF%BC/#more" rel="contents">
+                Read more &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2026/01/23/Assignment1-basics-chapter1&2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="Zian Wang">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Homepage">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content=" | Homepage">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/2026/01/23/Assignment1-basics-chapter1&2/" class="post-title-link" itemprop="url">cs336：Assignment1-basics-chapter1&2</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2026-01-23 22:15:15" itemprop="dateCreated datePublished" datetime="2026-01-23T22:15:15+08:00">2026-01-23</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">Edited on</span>
+      <time title="Modified: 2026-02-05 14:52:52" itemprop="dateModified" datetime="2026-02-05T14:52:52+08:00">2026-02-05</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/cs336/" itemprop="url" rel="index"><span itemprop="name">cs336</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="Word count in article">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">Word count in article: </span>
+      <span>21k</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <p>本文为cs336的assignment1中分词器对应章节的参考解答和课程笔记。   </p>
+<p>1 本文范围内的作业暂时还不需要用到GPU<br>2 本课程并未提供好系统适配，所以事实上不推荐在win上完成作业。在你的服务器or虚拟机上完成可以避免很多麻烦。</p>
+<h1 id="Setup："><a href="#Setup：" class="headerlink" title="Setup："></a>Setup：</h1><h2 id="环境配置："><a href="#环境配置：" class="headerlink" title="环境配置："></a>环境配置：</h2><p>按照<a target="_blank" rel="noopener" href="https://github.com/stanford-cs336/assignment1-basics/tree/main">https://github.com/stanford-cs336/assignment1-basics/tree/main</a> 中README的说明配置并测试uv。  </p>
+<p>如果你在Windows下，uv run pytest 时会出现问题，因为你没有办法import resource。<br>进行如下操作：<br>打开\assignment1-basics\tests\test_tokenizer.py， 删除第5行的import resource，或修改：  </p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">try</span>:</span><br><span class="line">    <span class="keyword">import</span> resource</span><br><span class="line"><span class="keyword">except</span> ImportError:</span><br><span class="line">    resource = <span class="literal">None</span></span><br></pre></td></tr></table></figure>
+<p>然后重新uv run pytest。  </p>
+<h2 id="数据下载："><a href="#数据下载：" class="headerlink" title="数据下载："></a>数据下载：</h2><p>下载 TinyStories data 和 subsample of OpenWebText：<br>课程原生使用的是wget； windows下，推荐使用curl。试着使用如下命令：<br><figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 创建并进入数据目录</span></span><br><span class="line">mkdir <span class="literal">-p</span> <span class="keyword">data</span></span><br><span class="line"><span class="built_in">cd</span> <span class="keyword">data</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 下载 TinyStories</span></span><br><span class="line">curl.exe <span class="literal">-L</span> <span class="literal">-o</span> TinyStoriesV2<span class="literal">-GPT4-train</span>.txt https://huggingface.co/datasets/roneneldan/TinyStories/resolve/main/TinyStoriesV2<span class="literal">-GPT4-train</span>.txt</span><br><span class="line">curl.exe <span class="literal">-L</span> <span class="literal">-o</span> TinyStoriesV2<span class="literal">-GPT4-valid</span>.txt https://huggingface.co/datasets/roneneldan/TinyStories/resolve/main/TinyStoriesV2<span class="literal">-GPT4-valid</span>.txt</span><br><span class="line"></span><br><span class="line"><span class="comment"># 下载 OpenWebText</span></span><br><span class="line">curl.exe <span class="literal">-L</span> <span class="literal">-o</span> owt_train.txt.gz https://huggingface.co/datasets/stanford<span class="literal">-cs336</span>/owt<span class="literal">-sample</span>/resolve/main/owt_train.txt.gz</span><br><span class="line">curl.exe <span class="literal">-L</span> <span class="literal">-o</span> owt_valid.txt.gz https://huggingface.co/datasets/stanford<span class="literal">-cs336</span>/owt<span class="literal">-sample</span>/resolve/main/owt_valid.txt.gz</span><br><span class="line"></span><br><span class="line"><span class="comment"># 解压 .gz 文件</span></span><br><span class="line"><span class="comment"># Windows 10/11 自带 tar.exe，可以替代 gunzip</span></span><br><span class="line">tar.exe <span class="literal">-xvzf</span> owt_train.txt.gz</span><br><span class="line">tar.exe <span class="literal">-xvzf</span> owt_valid.txt.gz</span><br><span class="line"></span><br><span class="line"><span class="built_in">cd</span> ..</span><br></pre></td></tr></table></figure></p>
+<p>如果解压不成功，考虑使用python原生解压。<br>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2026/01/23/Assignment1-basics-chapter1&2/#more" rel="contents">
+                Read more &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2026/01/22/tokenizer.py/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="Zian Wang">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Homepage">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content=" | Homepage">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/2026/01/22/tokenizer.py/" class="post-title-link" itemprop="url">tokenizer.py</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2026-01-22 22:15:15" itemprop="dateCreated datePublished" datetime="2026-01-22T22:15:15+08:00">2026-01-22</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">Edited on</span>
+      <time title="Modified: 2026-02-05 14:52:48" itemprop="dateModified" datetime="2026-02-05T14:52:48+08:00">2026-02-05</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/cs336/" itemprop="url" rel="index"><span itemprop="name">cs336</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="Word count in article">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">Word count in article: </span>
+      <span>7k</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <p>本文包含对Problem (train_bpe): BPE Tokenizer Training一问的解答及说明。</p>
+<p>完整代码见<a target="_blank" rel="noopener" href="https://github.com/Zian-2/cs336_assignments_and_notes/blob/main/assignment1-basics/cs336_basics/tokenizer.py">https://github.com/Zian-2/cs336_assignments_and_notes/blob/main/assignment1-basics/cs336_basics/tokenizer.py</a></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> os</span><br><span class="line"><span class="keyword">from</span> collections <span class="keyword">import</span> Counter</span><br><span class="line"><span class="keyword">import</span> regex <span class="keyword">as</span> re</span><br><span class="line"><span class="keyword">import</span> multiprocessing</span><br><span class="line"><span class="keyword">from</span> .pretokenization_example <span class="keyword">import</span> find_chunk_boundaries</span><br></pre></td></tr></table></figure>
+<p>Counter : 一种特殊的数据类型，本质上是字典，下面你会看到它在计数层面上会有一些方便。<br>regex：引入正则表达式<br>multiprocessing: 用于并行处理</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 预编译正则表达式</span></span><br><span class="line">PAT = re.<span class="built_in">compile</span>(<span class="string">r&quot;&quot;&quot;&#x27;(?:[sdmt]|ll|ve|re)| ?\p&#123;L&#125;+| ?\p&#123;N&#125;+| ?[^\s\p&#123;L&#125;\p&#123;N&#125;]+|\s+(?!\S)|\s+&quot;&quot;&quot;</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">pre_tokenization</span>(<span class="params">chunk,special_tokens</span>)-&gt;<span class="built_in">list</span>[<span class="built_in">str</span>]:</span><br><span class="line">        <span class="comment"># 预分词：先从special_token切开，再过一遍正则切成单词</span></span><br><span class="line">        result = []</span><br><span class="line">        <span class="comment"># 切割special_tokens</span></span><br><span class="line">        special_pat = <span class="string">&quot;(&quot;</span> + <span class="string">&quot;|&quot;</span>.join(re.escape(t) <span class="keyword">for</span> t <span class="keyword">in</span> special_tokens) + <span class="string">&quot;)&quot;</span></span><br><span class="line">        parts = re.split(special_pat, chunk)</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">for</span> part <span class="keyword">in</span> parts:</span><br><span class="line">            <span class="keyword">if</span> <span class="keyword">not</span> part:</span><br><span class="line">                <span class="keyword">continue</span></span><br><span class="line">            <span class="keyword">if</span> part <span class="keyword">in</span> special_tokens:</span><br><span class="line">                <span class="keyword">continue</span></span><br><span class="line"></span><br><span class="line">            <span class="comment"># 预分词</span></span><br><span class="line">            matches = PAT.finditer(part)</span><br><span class="line">            <span class="keyword">for</span> m <span class="keyword">in</span> matches:</span><br><span class="line">                result.append(<span class="string">f&quot;<span class="subst">&#123;m.group()&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> result</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>五个部分分别处理：缩写后缀（’ll, ‘ve, ‘t , ‘s等）；连续字母（单词）；连续数字；连续标点符号；连续纯空格。<br>正则表达式的编译是比较昂贵的，放在外面从而不用每次都编译一遍。<br>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2026/01/22/tokenizer.py/#more" rel="contents">
                 Read more &raquo;
               </a>
             </div>
