@@ -22,22 +22,29 @@
 
 <script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.27.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":true,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"},"path":"/search.xml","localsearch":{"enable":true,"top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js" defer></script>
 
-    <meta property="og:type" content="website">
-<meta property="og:title" content="Homepage">
-<meta property="og:url" content="http://example.com/archives/2026/index.html">
+    <meta name="description" content="6 Generating text既然我们已经可以训练模型了，最后需要从模型中生成文本的能力。   语言模型接收长度为 sequence_length 的整数序列（可以是批处理的），并产生一个大小为 (sequence_length × vocab_size) 的矩阵，其中序列的每个元素都是预测该位置之后下一个词的概率分布。我们现在将编写几个函数，将其转化为新序列的采样方案。  Softmax">
+<meta property="og:type" content="article">
+<meta property="og:title" content="cs336：Assignment1-basics-chapter6">
+<meta property="og:url" content="http://example.com/Assignment1-basics-chapter6/index.html">
 <meta property="og:site_name" content="Homepage">
+<meta property="og:description" content="6 Generating text既然我们已经可以训练模型了，最后需要从模型中生成文本的能力。   语言模型接收长度为 sequence_length 的整数序列（可以是批处理的），并产生一个大小为 (sequence_length × vocab_size) 的矩阵，其中序列的每个元素都是预测该位置之后下一个词的概率分布。我们现在将编写几个函数，将其转化为新序列的采样方案。  Softmax">
 <meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2026-01-26T12:16:02.000Z">
+<meta property="article:modified_time" content="2026-02-18T09:49:36.968Z">
 <meta property="article:author" content="Zian Wang">
+<meta property="article:tag" content="机器学习">
+<meta property="article:tag" content="深度学习">
+<meta property="article:tag" content="cs336">
 <meta name="twitter:card" content="summary">
 
 
-<link rel="canonical" href="http://example.com/archives/2026/">
+<link rel="canonical" href="http://example.com/Assignment1-basics-chapter6/">
 
 
-<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":false,"lang":"en","comments":"","permalink":"","path":"archives/2026/index.html","title":""}</script>
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"en","comments":true,"permalink":"http://example.com/Assignment1-basics-chapter6/","path":"Assignment1-basics-chapter6/","title":"cs336：Assignment1-basics-chapter6"}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
-<title>Archive | Homepage</title>
+<title>cs336：Assignment1-basics-chapter6 | Homepage</title>
   
 
 
@@ -119,7 +126,7 @@
 
     <a href="/" class="brand" rel="start">
       <i class="logo-line"></i>
-      <h1 class="site-title">Homepage</h1>
+      <p class="site-title">Homepage</p>
       <i class="logo-line"></i>
     </a>
   </div>
@@ -172,7 +179,7 @@
   
   <aside class="sidebar">
 
-    <div class="sidebar-inner sidebar-overview-active">
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
       <ul class="sidebar-nav">
         <li class="sidebar-nav-toc">
           Table of Contents
@@ -185,6 +192,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#6-Generating-text"><span class="nav-text">6 Generating text</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Problem-decoding-3-%E5%88%86"><span class="nav-text">Problem (decoding)  (3 分)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Answer%EF%BC%9A"><span class="nav-text">Answer：</span></a></li></ol></li></ol></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -240,189 +248,149 @@
 
     </div>
 
-    <div class="main-inner archive posts-collapse">
+    <div class="main-inner post posts-expand">
 
 
   
-  
-  
-  <div class="post-block">
-    <div class="post-content">
-      <div class="collection-title">
-        <span class="collection-header">Um..! 8 posts in total. Keep on posting.</span>
-      </div>
 
-      
-    <div class="collection-year">
-      <span class="collection-header">2026<span class="collection-year-count">8</span></span>
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/Assignment1-basics-chapter6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="Zian Wang">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Homepage">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="cs336：Assignment1-basics-chapter6 | Homepage">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          cs336：Assignment1-basics-chapter6
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2026-01-26 20:16:02" itemprop="dateCreated datePublished" datetime="2026-01-26T20:16:02+08:00">2026-01-26</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">Edited on</span>
+      <time title="Modified: 2026-02-18 17:49:36" itemprop="dateModified" datetime="2026-02-18T17:49:36+08:00">2026-02-18</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/cs336/" itemprop="url" rel="index"><span itemprop="name">cs336</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="Views" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">Views: </span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+    <span class="post-meta-item" title="Word count in article">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">Word count in article: </span>
+      <span>1.6k</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><h1 id="6-Generating-text"><a href="#6-Generating-text" class="headerlink" title="6 Generating text"></a>6 Generating text</h1><p>既然我们已经可以训练模型了，最后需要从模型中生成文本的能力。  </p>
+<p>语言模型接收长度为 sequence_length 的整数序列（可以是批处理的），并产生一个大小为 (sequence_length × vocab_size) 的矩阵，其中序列的每个元素都是预测该位置之后下一个词的概率分布。我们现在将编写几个函数，将其转化为新序列的采样方案。 </p>
+<p><strong>Softmax</strong>  按照标准惯例，语言模型的输出是最后一个线性层的输出（即 logits），因此我们必须通过在公式 10 中见过的 softmax 操作将其转化为归一化的概率。  </p>
+<p><strong>解码</strong>  为了从模型中生成文本（解码），我们将为模型提供一个前缀标记序列（即 prompt），并要求它产生一个在词表上的概率分布，以预测序列中的下一个词。然后，我们将从这个词表项的分布中进行采样，以确定下一个输出标记。</p>
+<p>具体来说，解码过程的一个步骤应该接收一个序列 $x_{1…t}$，并通过以下方程返回一个标记 $x_{t+1}$：</p>
+
+$$P(x_{t+1} = i | x_{1...t}) = \frac{\exp(v_i)}{\sum_j \exp(v_j)}$$
+
+$$v = TransformerLM(x_{1...t})_t \in \mathbb{R}^{vocab\_size}$$
+<p>其中 TransformerLM 是我们的模型，它输入长度为 sequence_length 的序列并产生一个大小为 (sequence_length × vocab_size) 的矩阵，我们取该矩阵的最后一个元素，因为我们正在寻找第 t 个位置的下一个词预测。  </p>
+<p>通过反复从这些单步条件分布中采样（将我们之前生成的输出标记附加到下一个解码时间步的输入中），直到生成序列结束标记 &lt;|endoftext|&gt;（或达到用户指定的生成标记最大数量），这就给了我们一个基本的解码器。</p>
+<p><strong>解码技巧</strong>  我们将尝试使用小型模型，而小型模型有时会生成质量非常低的文本。两个简单的解码技巧可以帮助解决这些问题。首先，在温度缩放(temperature scaling)中，我们使用温度参数 τ 修改 softmax，新的 softmax 为：</p>
+
+$$softmax(v, \tau)_i = \frac{\exp(v_i/\tau)}{\sum_{j=1}^{|vocab\_size|} \exp(v_j/\tau)}$$
+<p>注意设置 τ → 0 会使 v 中最大的元素占据主导地位（相当于贪婪搜索），softmax 的输出变成集中在这个最大元素上的 one-hot 向量。 </p>
+<p>其次，另一个技巧是nucleus采样或 top-p 采样，我们通过截断低概率词来修改采样分布。设 q 为我们从大小为 (vocab_size) 的（经过温度缩放的）softmax 中得到的概率分布。使用超参数 p 的核采样根据以下方程生成下一个标记： </p>
+
+$$P(x_{t+1} = i | q) = \begin{cases} \frac{q_i}{\sum_{j \in V(p)} q_j} & \text{如果 } i \in V(p) \\ 0 & \text{否则} \end{cases}$$
+<p>其中 V(p) 是满足 $\sum_{j \in V(p)} q_j \geq p$ 的最小索引集合。你可以通过首先按大小对概率分布 q 进行排序，并选择最大的词表元素直到达到目标水平 p，从而轻松计算这个数值。  </p>
+<h2 id="Problem-decoding-3-分"><a href="#Problem-decoding-3-分" class="headerlink" title="Problem (decoding)  (3 分)"></a>Problem (decoding)  (3 分)</h2><p>实现一个从你的语言模型进行解码的函数。我们建议你支持以下功能：  </p>
+<p>为用户提供的提示词生成补全（即接收某些 x1…t 并进行采样补全，直到遇到 &lt;|endoftext|&gt; 标记）。  </p>
+<p>允许用户控制生成的最大标记数量。  </p>
+<p>给定所需的温度值，在采样前对预测的下一词分布应用 softmax 温度缩放。  </p>
+<p>给定用户指定的阈值，进行 Top-p 采样。</p>
+<h3 id="Answer："><a href="#Answer：" class="headerlink" title="Answer："></a>Answer：</h3><p>见transformer_generation.py</p>
+
     </div>
 
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-      <div class="post-meta-container">
-        <time itemprop="dateCreated"
-              datetime="2026-01-26T20:17:01+08:00"
-              content="2026-01-26">
-          01-26
-        </time>
-      </div>
+    
+    
+    
 
-      <div class="post-title">
-          <a class="post-title-link" href="/Assignment1-basics-chapter7/" itemprop="url">
-            <span itemprop="name">cs336：Assignment1-basics-chapter7</span>
-          </a>
-      </div>
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/" rel="tag"># 机器学习</a>
+              <a href="/tags/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/" rel="tag"># 深度学习</a>
+              <a href="/tags/cs336/" rel="tag"># cs336</a>
+          </div>
 
-      
-    </header>
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/Assignment1-basics-chapter5/" rel="prev" title="cs336：Assignment1-basics-chapter5">
+                  <i class="fa fa-angle-left"></i> cs336：Assignment1-basics-chapter5
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/Assignment1-basics-chapter7/" rel="next" title="cs336：Assignment1-basics-chapter7">
+                  cs336：Assignment1-basics-chapter7 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
   </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-      <div class="post-meta-container">
-        <time itemprop="dateCreated"
-              datetime="2026-01-26T20:16:02+08:00"
-              content="2026-01-26">
-          01-26
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/Assignment1-basics-chapter6/" itemprop="url">
-            <span itemprop="name">cs336：Assignment1-basics-chapter6</span>
-          </a>
-      </div>
-
-      
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-      <div class="post-meta-container">
-        <time itemprop="dateCreated"
-              datetime="2026-01-26T20:16:01+08:00"
-              content="2026-01-26">
-          01-26
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/Assignment1-basics-chapter5/" itemprop="url">
-            <span itemprop="name">cs336：Assignment1-basics-chapter5</span>
-          </a>
-      </div>
-
-      
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-      <div class="post-meta-container">
-        <time itemprop="dateCreated"
-              datetime="2026-01-26T20:15:01+08:00"
-              content="2026-01-26">
-          01-26
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/Assignment1-basics-chapter4/" itemprop="url">
-            <span itemprop="name">cs336：Assignment1-basics-chapter4</span>
-          </a>
-      </div>
-
-      
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-      <div class="post-meta-container">
-        <time itemprop="dateCreated"
-              datetime="2026-01-25T22:15:15+08:00"
-              content="2026-01-25">
-          01-25
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/Assignment1-basics-chapter3/" itemprop="url">
-            <span itemprop="name">cs336：Assignment1-basics-chapter3</span>
-          </a>
-      </div>
-
-      
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-      <div class="post-meta-container">
-        <time itemprop="dateCreated"
-              datetime="2026-01-24T22:15:15+08:00"
-              content="2026-01-24">
-          01-24
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/%E7%9F%A9%E9%98%B5%E6%B1%82%E5%AF%BC/" itemprop="url">
-            <span itemprop="name">矩阵求导理论：几种表示</span>
-          </a>
-      </div>
-
-      
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-      <div class="post-meta-container">
-        <time itemprop="dateCreated"
-              datetime="2026-01-23T22:15:15+08:00"
-              content="2026-01-23">
-          01-23
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/Assignment1-basics-chapter1&2/" itemprop="url">
-            <span itemprop="name">cs336：Assignment1-basics-chapter1&2</span>
-          </a>
-      </div>
-
-      
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-      <div class="post-meta-container">
-        <time itemprop="dateCreated"
-              datetime="2026-01-22T22:15:15+08:00"
-              content="2026-01-22">
-          01-22
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/tokenizer.py/" itemprop="url">
-            <span itemprop="name">tokenizer.py</span>
-          </a>
-      </div>
-
-      
-    </header>
-  </article>
+</div>
 
 
-    </div>
-  </div>
-  
-  
-  
+
+
+
 
 </div>
   </main>

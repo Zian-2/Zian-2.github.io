@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 7.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&display=swap&subset=latin,latin-ext">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pace/1.2.4/themes/green/pace-theme-minimal.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pace/1.2.4/pace.min.js" integrity="sha256-gqd7YTjg/BtfqWSwsJOvndl0Bxc8gFImLEkXQT8+qj0=" crossorigin="anonymous" defer></script>
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.27.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":true,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"},"path":"/search.xml","localsearch":{"enable":true,"top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="4 Training a Transformer我们现在已经有了预处理数据（通过分词器）和模型（Transformer）的步骤。剩下的工作是构建支持训练的所有代码。这由以下部分组成： • 损失函数：我们需要定义损失函数（交叉熵）。• 优化器：我们需要定义优化器来最小化这个损失（AdamW）。• 训练循环：我们需要所有支持性的基础设施，用于加载数据、保存检查点并管理训练。   4.1 交叉熵损失回想">
+<meta property="og:type" content="article">
+<meta property="og:title" content="cs336：Assignment1-basics-chapter4">
+<meta property="og:url" content="http://example.com/Assignment1-basics-chapter4/index.html">
+<meta property="og:site_name" content="Homepage">
+<meta property="og:description" content="4 Training a Transformer我们现在已经有了预处理数据（通过分词器）和模型（Transformer）的步骤。剩下的工作是构建支持训练的所有代码。这由以下部分组成： • 损失函数：我们需要定义损失函数（交叉熵）。• 优化器：我们需要定义优化器来最小化这个损失（AdamW）。• 训练循环：我们需要所有支持性的基础设施，用于加载数据、保存检查点并管理训练。   4.1 交叉熵损失回想">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2026-01-26T12:15:01.000Z">
+<meta property="article:modified_time" content="2026-02-18T09:49:25.475Z">
+<meta property="article:author" content="Zian Wang">
+<meta property="article:tag" content="机器学习">
+<meta property="article:tag" content="深度学习">
+<meta property="article:tag" content="cs336">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="http://example.com/Assignment1-basics-chapter4/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"en","comments":true,"permalink":"http://example.com/Assignment1-basics-chapter4/","path":"Assignment1-basics-chapter4/","title":"cs336：Assignment1-basics-chapter4"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>cs336：Assignment1-basics-chapter4 | Homepage</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/next-theme-pjax/0.6.0/pjax.min.js" integrity="sha256-vxLn1tSKWD4dqbMRyv940UYw4sXgMtYcK6reefzZrao=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script><script src="/js/pjax.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+
+  <script src="/js/third-party/pace.js" defer></script>
+
+
+  
+  <script data-pjax async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">true</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"cdn":"//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML","tags":"ams","js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js","integrity":"sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI="}}</script>
+<script src="/js/third-party/math/mathjax.js" defer></script>
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<script>
+  // 无论谁抢了焦点，一律滚回顶端
+  (function() {
+    // 立即执行：禁止浏览器恢复滚动
+    if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }
+    
+    // 页面加载完成后 100 毫秒，强行归位
+    window.addEventListener('load', function() {
+      setTimeout(function() {
+        window.scrollTo(0, 0);
+        document.body.scrollTop = 0;
+      }, 100);
+    });
+  })();
+</script>
+
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  
+  <video id="custom-bg-video" autoplay loop muted playsinline tabindex="-1">
+    <source src="/images/background.mp4" type="video/mp4">
+  </video>
+
+  <div class="headband"></div>
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Homepage</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="Search" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="Searching..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#4-Training-a-Transformer"><span class="nav-text">4 Training a Transformer</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#4-1-%E4%BA%A4%E5%8F%89%E7%86%B5%E6%8D%9F%E5%A4%B1"><span class="nav-text">4.1 交叉熵损失</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Problem-cross-entropy-%E5%AE%9E%E7%8E%B0%E4%BA%A4%E5%8F%89%E7%86%B5"><span class="nav-text">Problem (cross_entropy): 实现交叉熵</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Answer-%EF%BC%9A"><span class="nav-text">Answer ：</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-2-SGD-%E4%BC%98%E5%8C%96%E5%99%A8"><span class="nav-text">4.2 SGD 优化器</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-1-%E5%9C%A8-PyTorch-%E4%B8%AD%E5%AE%9E%E7%8E%B0-SGD"><span class="nav-text">4.2.1 在 PyTorch 中实现 SGD</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Problem-learning-rate-tuning-%E8%B0%83%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%8E%87-1-point"><span class="nav-text">Problem (learning_rate_tuning): 调整学习率 (1 point)</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Answer%EF%BC%9A"><span class="nav-text">Answer：</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-3-AdamW"><span class="nav-text">4.3 AdamW</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AE%97%E6%B3%95-AdamW-%E4%BC%98%E5%8C%96%E5%99%A8"><span class="nav-text">算法  AdamW 优化器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Problem-adamw-%E5%AE%9E%E7%8E%B0-AdamW-2-points"><span class="nav-text">Problem (adamw): 实现 AdamW (2 points)</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Answer%EF%BC%9A-1"><span class="nav-text">Answer：</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Problem-adamwAccounting-%E4%BD%BF%E7%94%A8-AdamW-%E8%AE%AD%E7%BB%83%E7%9A%84%E8%B5%84%E6%BA%90%E6%A0%B8%E7%AE%97-2-points"><span class="nav-text">Problem (adamwAccounting): 使用 AdamW 训练的资源核算 (2 points)</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Answer%EF%BC%9A-2"><span class="nav-text">Answer：</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-4-%E5%AD%A6%E4%B9%A0%E7%8E%87%E8%B0%83%E5%BA%A6-scheduling"><span class="nav-text">4.4 学习率调度(scheduling)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Problem-learning-rate-schedule-%E5%AE%9E%E7%8E%B0%E5%B8%A6%E9%A2%84%E7%83%AD%E7%9A%84%E4%BD%99%E5%BC%A6%E5%AD%A6%E4%B9%A0%E7%8E%87%E8%B0%83%E5%BA%A6"><span class="nav-text">Problem (learning_rate_schedule): 实现带预热的余弦学习率调度</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Answer%EF%BC%9A-3"><span class="nav-text">Answer：</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-5-%E6%A2%AF%E5%BA%A6%E8%A3%81%E5%89%AA"><span class="nav-text">4.5 梯度裁剪</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Problem-gradient-clipping-%E5%AE%9E%E7%8E%B0%E6%A2%AF%E5%BA%A6%E8%A3%81%E5%89%AA-1-point"><span class="nav-text">Problem (gradient_clipping): 实现梯度裁剪 (1 point)</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Answer%EF%BC%9A-4"><span class="nav-text">Answer：</span></a></li></ol></li></ol></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Zian Wang"
+      src="/images/avatar.jpg">
+  <p class="site-author-name" itemprop="name">Zian Wang</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">8</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="/" title="Shanghai → &#x2F;" rel="noopener me"><i class="fa fa-map-marker-alt fa-fw"></i>Shanghai</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://zian-2.github.io/" title="Website → https:&#x2F;&#x2F;zian-2.github.io&#x2F;" rel="noopener me" target="_blank"><i class="fa fa-globe fa-fw"></i>Website</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://github.com/zian-2" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zian-2" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:w3382864761@gmail.com" title="E-Mail → mailto:w3382864761@gmail.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/Assignment1-basics-chapter4/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="Zian Wang">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Homepage">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="cs336：Assignment1-basics-chapter4 | Homepage">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          cs336：Assignment1-basics-chapter4
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2026-01-26 20:15:01" itemprop="dateCreated datePublished" datetime="2026-01-26T20:15:01+08:00">2026-01-26</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">Edited on</span>
+      <time title="Modified: 2026-02-18 17:49:25" itemprop="dateModified" datetime="2026-02-18T17:49:25+08:00">2026-02-18</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/cs336/" itemprop="url" rel="index"><span itemprop="name">cs336</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="Views" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">Views: </span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+    <span class="post-meta-item" title="Word count in article">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">Word count in article: </span>
+      <span>9.4k</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><h1 id="4-Training-a-Transformer"><a href="#4-Training-a-Transformer" class="headerlink" title="4 Training a Transformer"></a>4 Training a Transformer</h1><p>我们现在已经有了预处理数据（通过分词器）和模型（Transformer）的步骤。剩下的工作是构建支持训练的所有代码。这由以下部分组成：</p>
+<p>• 损失函数：我们需要定义损失函数（交叉熵）。<br>• 优化器：我们需要定义优化器来最小化这个损失（AdamW）。<br>• 训练循环：我们需要所有支持性的基础设施，用于加载数据、保存检查点并管理训练。<br><br> <br> <br></p>
+<h2 id="4-1-交叉熵损失"><a href="#4-1-交叉熵损失" class="headerlink" title="4.1 交叉熵损失"></a>4.1 交叉熵损失</h2><p>回想一下，Transformer 语言模型为每个长度为 $m + 1$ 的序列 $x$ 以及 $i = 1, \dots, m$ 定义了一个分布 $p_\theta(x_{i+1} | x_{1:i})$。给定一个由长度为 $m$ 的序列组成的训练集 $D$，我们定义标准交叉熵（负对数似然）损失函数：</p>
+
+$$\ell(\theta; D) = \frac{1}{|D|m} \sum_{x \in D} \sum_{i=1}^{m} -\log p_\theta(x_{i+1} | x_{1:i}). \quad (16)$$
+<p>（注意，Transformer 中的单次前向传递会产生所有 $i = 1, \dots, m$ 的 $p_\theta(x_{i+1} | x_{1:i})$。）</p>
+<p>特别地，Transformer 为每个位置 $i$ 计算逻辑值 $o_{i} \in \mathbb{R}^{\text{vocabsize}}$，其结果为：</p>
+
+$$p(x_{i+1} | x_{1:i}) = \text{softmax}(o_i)[x_{i+1}] = \frac{\exp(o_i[x_{i+1}])}{\sum_{a=1}^{\text{vocabsize}} \exp(o_i[a])}. \quad (17)$$
+<p>交叉熵损失通常是相对于逻辑值向量 $o_{i} \in \mathbb{R}^{\text{vocabsize}}$ 和目标 $x_{i+1}$ 定义的。</p>
+<p>实现交叉熵损失需要注意数值(溢出)问题，就像 softmax 的情况一样。</p>
+<h3 id="Problem-cross-entropy-实现交叉熵"><a href="#Problem-cross-entropy-实现交叉熵" class="headerlink" title="Problem (cross_entropy): 实现交叉熵"></a>Problem (cross_entropy): 实现交叉熵</h3><p>编写一个计算交叉熵损失的函数，该函数接收预测的逻辑值 ($o_{i}$) 和目标 ($x_{i+1}$)，并计算交叉熵 $\ell_i = -\log \text{softmax}(o_{i})[x_{i+1}]$。你的函数应该处理以下内容：</p>
+<p>• 为了数值稳定性，减去最大的元素。</p>
+<p>• 尽可能抵消 log 和 exp。</p>
+<p>• 处理任何额外的批次维度，并返回整个批次的平均值。与 3.3 节一样，我们假设类批次维度总是出现在词表大小维度之前。</p>
+<p>实现 [adapters.run_cross_entropy]，然后运行 uv run pytest -k test_cross_entropy 来测试。</p>
+<p><strong>困惑度（Perplexity）</strong>：交叉熵足以进行训练，但当我们评估模型时，我们也希望报告困惑度。对于长度为 $m$ 且遭受交叉熵损失 $\ell_1, \dots, \ell_m$ 的序列：</p>
+
+$$\text{perplexity} = \exp \left( \frac{1}{m} \sum_{i=1}^{m} \ell_i \right). \quad (18)$$
+<p>物理意义：困惑度可以被看作是模型在预测下一个词时，平均在多少个等概率的选项中做选择。$PP = 10$-&gt;模型相当于在 10 个词里犹豫。如果 $PP = |Vocab|$-&gt;模型相当于在随机选。</p>
+<h4 id="Answer-："><a href="#Answer-：" class="headerlink" title="Answer ："></a>Answer ：</h4><p>见transformer_training.cross_entropy和adapter.run_cross_entropy。</p>
+<p><br> <br> <br></p>
+<h2 id="4-2-SGD-优化器"><a href="#4-2-SGD-优化器" class="headerlink" title="4.2 SGD 优化器"></a>4.2 SGD 优化器</h2><p>现在我们有了损失函数，我们将开始探索优化器。最简单的基于梯度的优化器是随机梯度下降（SGD）。我们从随机初始化的参数 $\theta_0$ 开始。然后对于每一步 $t = 0, \dots, T-1$，我们执行以下更新：</p>
+
+$$\theta_{t+1} \leftarrow \theta_t - \alpha_t \nabla L(\theta_t; B_t), \quad (19)$$
+<p>其中 $B_t$ 是从数据集 $D$ 中采样的随机数据批次，学习率 $\alpha_t$ 和批次大小 $|B_t|$ 是超参数。</p>
+<h3 id="4-2-1-在-PyTorch-中实现-SGD"><a href="#4-2-1-在-PyTorch-中实现-SGD" class="headerlink" title="4.2.1 在 PyTorch 中实现 SGD"></a>4.2.1 在 PyTorch 中实现 SGD</h3><p>为了实现我们的优化器，我们将继承 PyTorch 的 <code>torch.optim.Optimizer</code> 类。一个优化器子类必须实现两个方法：</p>
+<p><code>def __init__(self, params, ...)</code> 应该初始化你的优化器。这里，<code>params</code> 将是要优化的参数集合（或参数组，以防用户想要对模型的不同部分使用不同的超参数，如学习率）。确保将 <code>params</code> 传递给基类的 <code>__init__</code> 方法，该方法将存储这些参数以供在 <code>step</code> 中使用。你可以根据优化器接收额外的参数（例如，学习率是一个常见的参数），并以字典的形式将它们传递给基类构造函数，其中键是你为这些参数选择的名称（字符串）。</p>
+<p><code>def step(self)</code> 应该对参数进行一次更新。在训练循环期间，这将在反向传播之后被调用，因此你可以访问上一个批次的梯度。此方法应遍历每个参数张量 <code>p</code> 并就地修改它们，即根据梯度 <code>p.grad</code>（如果存在）设置 <code>p.data</code>。</p>
+<p>PyTorch 优化器 API 有一些微妙之处，因此通过示例来解释更容易。为了使我们的示例更丰富，我们将实现 SGD 的一个略微变体，其中学习率在训练过程中衰减，从初始学习率 $\alpha$ 开始，随着时间的推移采取连续更小的步长：</p>
+
+$$\theta_{t+1} = \theta_t - \frac{\alpha}{\sqrt{t+1}} \nabla L(\theta_t; B_t) \quad (20)$$
+<p>让我们看看这个版本的 SGD 如何实现为 PyTorch 优化器：<br><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> collections.abc <span class="keyword">import</span> <span class="type">Callable</span>, Iterable</span><br><span class="line"><span class="keyword">from</span> typing <span class="keyword">import</span> <span class="type">Optional</span></span><br><span class="line"><span class="keyword">import</span> torch</span><br><span class="line"><span class="keyword">import</span> math</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">SGD</span>(torch.optim.Optimizer):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, params, lr=<span class="number">1e-3</span></span>):</span><br><span class="line">        <span class="keyword">if</span> lr &lt; <span class="number">0</span>:</span><br><span class="line">            <span class="keyword">raise</span> ValueError(<span class="string">f&quot;Invalid learning rate: <span class="subst">&#123;lr&#125;</span>&quot;</span>)</span><br><span class="line">        defaults = &#123;<span class="string">&quot;lr&quot;</span>: lr&#125;</span><br><span class="line">        <span class="built_in">super</span>().__init__(params, defaults)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">step</span>(<span class="params">self, closure: <span class="type">Optional</span>[<span class="type">Callable</span>] = <span class="literal">None</span></span>):</span><br><span class="line">        loss = <span class="literal">None</span> <span class="keyword">if</span> closure <span class="keyword">is</span> <span class="literal">None</span> <span class="keyword">else</span> closure()</span><br><span class="line">        <span class="keyword">for</span> group <span class="keyword">in</span> <span class="variable language_">self</span>.param_groups:</span><br><span class="line">            lr = group[<span class="string">&quot;lr&quot;</span>] <span class="comment"># 获取学习率。</span></span><br><span class="line">            <span class="keyword">for</span> p <span class="keyword">in</span> group[<span class="string">&quot;params&quot;</span>]:</span><br><span class="line">                <span class="keyword">if</span> p.grad <span class="keyword">is</span> <span class="literal">None</span>:</span><br><span class="line">                    <span class="keyword">continue</span></span><br><span class="line">                state = <span class="variable language_">self</span>.state[p] <span class="comment"># 获取与 p 相关的状态。</span></span><br><span class="line">                t = state.get(<span class="string">&quot;t&quot;</span>, <span class="number">0</span>) <span class="comment"># 从状态中获取迭代次数，或初始值。</span></span><br><span class="line">                grad = p.grad.data <span class="comment"># 获取损失相对于 p 的梯度。</span></span><br><span class="line">                p.data -= lr / math.sqrt(t + <span class="number">1</span>) * grad <span class="comment"># 就地更新权重张量。</span></span><br><span class="line">                state[<span class="string">&quot;t&quot;</span>] = t + <span class="number">1</span> <span class="comment"># 增加迭代次数。</span></span><br><span class="line">        <span class="keyword">return</span> loss</span><br></pre></td></tr></table></figure></p>
+<p>在 <code>__init__</code> 中，我们将参数以及默认超参数传递给基类构造函数。在 <code>step</code> 中，我们遍历每个参数组，然后遍历该组中的每个参数，并应用公式 20。在这里，我们将迭代次数保留为与每个参数相关的状态：我们首先读取该值，在梯度更新中使用它，然后更新它。API 规定用户可以传入一个可调用的 closure 来在优化器步骤之前重新计算损失。我们不需要这个，但我们添加它以符合 API。</p>
+<p>我们可以使用以下极简的训练循环示例来查看其运行情况：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">weights = torch.nn.Parameter(<span class="number">5</span> * torch.randn((<span class="number">10</span>, <span class="number">10</span>)))</span><br><span class="line">opt = SGD([weights], lr=<span class="number">1</span>)</span><br><span class="line"><span class="keyword">for</span> t <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">100</span>):</span><br><span class="line">    opt.zero_grad() <span class="comment"># 重置所有可学习参数的梯度。</span></span><br><span class="line">    loss = (weights**<span class="number">2</span>).mean() <span class="comment"># 计算标量损失值。</span></span><br><span class="line">    <span class="built_in">print</span>(loss.cpu().item())</span><br><span class="line">    loss.backward() <span class="comment"># 运行反向传播，计算梯度。</span></span><br><span class="line">    opt.step() <span class="comment"># 运行优化器步骤。</span></span><br></pre></td></tr></table></figure>
+<p>这是训练循环的典型结构：在每次迭代中，我们将计算损失并运行优化器的步骤。当训练语言模型时，我们的可学习参数将来自模型（在 PyTorch 中，<code>m.parameters()</code> 为我们提供此集合）。损失将在采样的批次数据上计算，但训练循环的基本结构将保持不变。</p>
+<h4 id="Problem-learning-rate-tuning-调整学习率-1-point"><a href="#Problem-learning-rate-tuning-调整学习率-1-point" class="headerlink" title="Problem (learning_rate_tuning): 调整学习率 (1 point)"></a>Problem (learning_rate_tuning): 调整学习率 (1 point)</h4><p>正如我们将看到的，影响训练最多的超参数之一是学习率。让我们在我们的玩具示例中实践一下。使用另外三个学习率值运行上述 SGD 示例：1e1、1e2 和 1e3，仅进行 10 次训练迭代。对于这些学习率中的每一个，损失会发生什么变化？它是衰减得更快、更慢，还是发散（即在训练过程中增加）？</p>
+<h5 id="Answer："><a href="#Answer：" class="headerlink" title="Answer："></a>Answer：</h5><p>如下，全都发散？<br><figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">PS</span> D:\cs336_assignments_and_notes\assignment1<span class="literal">-basics</span>\cs336_basics&gt; uv run python lr_tuning_test.py</span><br><span class="line">===== Testing LR: <span class="number">10.0</span> =====</span><br><span class="line">Step <span class="number">0</span>: Loss = <span class="number">2.50</span>e+<span class="number">01</span></span><br><span class="line">Step <span class="number">1</span>: Loss = <span class="number">9.02</span>e+<span class="number">03</span></span><br><span class="line">Step <span class="number">2</span>: Loss = <span class="number">1.56</span>e+<span class="number">06</span></span><br><span class="line">Step <span class="number">3</span>: Loss = <span class="number">1.73</span>e+<span class="number">08</span></span><br><span class="line">Step <span class="number">4</span>: Loss = <span class="number">1.40</span>e+<span class="number">10</span></span><br><span class="line">Step <span class="number">5</span>: Loss = <span class="number">8.86</span>e+<span class="number">11</span></span><br><span class="line">Step <span class="number">6</span>: Loss = <span class="number">4.55</span>e+<span class="number">13</span></span><br><span class="line">Step <span class="number">7</span>: Loss = <span class="number">1.96</span>e+<span class="number">15</span></span><br><span class="line">Step <span class="number">8</span>: Loss = <span class="number">7.22</span>e+<span class="number">16</span></span><br><span class="line">Step <span class="number">9</span>: Loss = <span class="number">2.32</span>e+<span class="number">18</span></span><br><span class="line"></span><br><span class="line">===== Testing LR: <span class="number">100.0</span> =====</span><br><span class="line">Step <span class="number">0</span>: Loss = <span class="number">2.50</span>e+<span class="number">01</span></span><br><span class="line">Step <span class="number">1</span>: Loss = <span class="number">9.90</span>e+<span class="number">05</span></span><br><span class="line">Step <span class="number">2</span>: Loss = <span class="number">1.95</span>e+<span class="number">10</span></span><br><span class="line">Step <span class="number">3</span>: Loss = <span class="number">2.56</span>e+<span class="number">14</span></span><br><span class="line">Step <span class="number">4</span>: Loss = <span class="number">2.51</span>e+<span class="number">18</span></span><br><span class="line">Step <span class="number">5</span>: Loss = <span class="number">1.96</span>e+<span class="number">22</span></span><br><span class="line">Step <span class="number">6</span>: Loss = <span class="number">1.28</span>e+<span class="number">26</span></span><br><span class="line">Step <span class="number">7</span>: Loss = <span class="number">7.10</span>e+<span class="number">29</span></span><br><span class="line">Step <span class="number">8</span>: Loss = <span class="number">3.45</span>e+<span class="number">33</span></span><br><span class="line">Step <span class="number">9</span>: Loss = <span class="number">1.49</span>e+<span class="number">37</span></span><br><span class="line"></span><br><span class="line">===== Testing LR: <span class="number">1000.0</span> =====</span><br><span class="line">Step <span class="number">0</span>: Loss = <span class="number">2.50</span>e+<span class="number">01</span></span><br><span class="line">Step <span class="number">1</span>: Loss = <span class="number">9.99</span>e+<span class="number">07</span></span><br><span class="line">Step <span class="number">2</span>: Loss = <span class="number">2.00</span>e+<span class="number">14</span></span><br><span class="line">Step <span class="number">3</span>: Loss = <span class="number">2.66</span>e+<span class="number">20</span></span><br><span class="line">Step <span class="number">4</span>: Loss = <span class="number">2.65</span>e+<span class="number">26</span></span><br><span class="line">Step <span class="number">5</span>: Loss = <span class="number">2.12</span>e+<span class="number">32</span></span><br><span class="line">Step <span class="number">6</span>: Loss = <span class="number">1.41</span>e+<span class="number">38</span></span><br><span class="line">Step <span class="number">7</span>: Loss = inf</span><br><span class="line">Step <span class="number">8</span>: Loss = inf</span><br><span class="line">Step <span class="number">9</span>: Loss = inf</span><br></pre></td></tr></table></figure></p>
+<p><br> <br> <br></p>
+<h2 id="4-3-AdamW"><a href="#4-3-AdamW" class="headerlink" title="4.3 AdamW"></a>4.3 AdamW</h2><p>现代语言模型通常使用更复杂的优化器，而不是 SGD。最近使用的大多数优化器都是 Adam 优化器 [Kingma and Ba, 2015] 的衍生品。我们将使用 AdamW [Loshchilov and Hutter, 2019]，它在最近的工作中被广泛使用。AdamW 提出了一种对 Adam 的修改，通过添加权重衰减（在每次迭代中，我们将参数向 0 拉动）来改进正则化，其方式与梯度更新解耦。我们将按照 Loshchilov and Hutter [2019] 的算法 2 中描述的方式实现 AdamW。</p>
+<p>AdamW 是有状态的：对于每个参数，它都会跟踪其一阶和二阶矩的运行估计。因此，AdamW 使用额外的内存以换取更好的稳定性和收敛性。除了学习率 $\alpha$ 外，AdamW 还有一对控制矩估计更新的超参数 ($\beta_1, \beta_2$)，以及权重衰减率 $\lambda$。算法可以写成如下形式，其中 $\epsilon$ 是用于在二阶矩 $v$ 极其小时提高数值稳定性的微小值：</p>
+<h3 id="算法-AdamW-优化器"><a href="#算法-AdamW-优化器" class="headerlink" title="算法  AdamW 优化器"></a>算法  AdamW 优化器</h3><p>init($\theta$)（初始化可学习参数）<br>$m \leftarrow 0$（一阶矩向量的初始值；形状与 $\theta$ 相同）<br>$v \leftarrow 0$（二阶矩向量的初始值；形状与 $\theta$ 相同）<br>for $t = 1, \dots, T$   do<br>    采样数据批次 $B_t$<br>    $g \leftarrow \nabla_\theta \ell(\theta; B_t)$（计算当前步的损失梯度）<br>    $m \leftarrow \beta_1 m + (1 - \beta_1)g$（更新一阶矩估计）<br>    $v \leftarrow \beta_2 v + (1 - \beta_2)g^2$（更新二阶矩估计）<br>    $\alpha_t \leftarrow \alpha \frac{\sqrt{1-(\beta_2)^t}}{1-(\beta_1)^t}$（计算迭代 $t$ 的调整后的 $\alpha$）<br>    $\theta \leftarrow \theta - \alpha_t \frac{m}{\sqrt{v}+\epsilon}$（更新参数）<br>    $\theta \leftarrow \theta - \alpha \lambda \theta$（应用权重衰减）<br>end for</p>
+<p>注意 $t$ 从 1 开始。<br>你现在将实现这个优化器。</p>
+<h3 id="Problem-adamw-实现-AdamW-2-points"><a href="#Problem-adamw-实现-AdamW-2-points" class="headerlink" title="Problem (adamw): 实现 AdamW (2 points)"></a>Problem (adamw): 实现 AdamW (2 points)</h3><p>将 AdamW 优化器实现为 <code>torch.optim.Optimizer</code> 的子类。你的类应在 <code>__init__</code> 中接收学习率 $\alpha$，以及 $\beta$、$\epsilon$ 和 $\lambda$ 超参数。为了帮助你保持状态，基类 <code>Optimizer</code> 为你提供了一个字典 <code>self.state</code>，它将 <code>nn.Parameter</code> 对象映射到一个字典，该字典存储该参数所需的任何信息。实现 [adapters.get_adamw_cls] 并确保它通过 <code>uv run pytest -k test_adamw</code>。</p>
+<h4 id="Answer：-1"><a href="#Answer：-1" class="headerlink" title="Answer："></a>Answer：</h4><p>见transformer_training.AdamW 。</p>
+<h3 id="Problem-adamwAccounting-使用-AdamW-训练的资源核算-2-points"><a href="#Problem-adamwAccounting-使用-AdamW-训练的资源核算-2-points" class="headerlink" title="Problem (adamwAccounting): 使用 AdamW 训练的资源核算 (2 points)"></a>Problem (adamwAccounting): 使用 AdamW 训练的资源核算 (2 points)</h3><p>让我们计算运行 AdamW 需要多少内存和计算量。假设我们为每个张量使用 float32。</p>
+<p>(a) 运行 AdamW 需要多少峰值内存？根据参数、激活值、梯度和优化器状态（optimizer state）的内存使用情况分解你的答案。用 batch_size 和模型超参数 (vocab_size, context_length, num_layers, d_model, num_heads) 来表达你的答案。假设 $d_{ff} = 4 \times d_{model}$。</p>
+<p>为了简单起见，在计算激活值的内存使用时，仅考虑以下组件：</p>
+<p>• Transformer 块<br>    – RMSNorm(s)<br>    – 多头自注意力子层：QKV 投影、$Q^\top K$ 矩阵乘法、softmax、值的加权和、输出投影。<br>    – 逐位置前馈：$W_1$ 矩阵乘法、SiLU、$W_2$ 矩阵乘法</p>
+<p>• 最终 RMSNorm<br>• 输出嵌入<br>• 逻辑值上的交叉熵</p>
+<p>回答：参数、激活值、梯度和优化器状态以及总和的代数表达式。</p>
+<p>(b) 为 GPT-2 XL 形状的模型实例化你的答案，得到一个仅依赖于 batch_size 的表达式。在 80GB 内存范围内，你可以使用的最大批次大小是多少？</p>
+<p>回答：一个看起来像 $a \cdot \text{batchsize} + b$ 的数值表达式，以及代表最大批次大小的数字。</p>
+<p>(c) 运行 AdamW 的一个步骤需要多少个 FLOPs？</p>
+<p>(d) 模型 FLOPs 利用率 (MFU) 定义为观察到的吞吐量（每秒 token 数）与硬件理论峰值 FLOP 吞吐量的比值 [Chowdhery et al., 2022]。NVIDIA A100 GPU 对于 float32 操作的理论峰值为 19.5 teraFLOP/s。假设你能够获得 50% 的 MFU，在单台 A100 上训练 GPT-2 XL 400K 步且批次大小为 1024 需要多长时间？遵循 Kaplan et al. [2020] 和 Hoffmann et al. [2022]，假设反向传播的 FLOPs 是前向传播的两倍。</p>
+<p>回答：训练所需的天数及简要说明。</p>
+<h4 id="Answer：-2"><a href="#Answer：-2" class="headerlink" title="Answer："></a>Answer：</h4><p>(a)计算峰值内存<br>A. 静态：<br>设参数个数N。<br>内存里：参数N个，梯度N个，optimizer state2N个(m和v)<br>共4N。<br>又，由chapter3最后一问的结尾，有  $N \approx vocab\_size \cdot d_{model}+ num\_layers \cdot (12d_{model}^2) + vocab\_size \cdot d_{model}$<br>B. 动态：<br>1 每层2个ln：$2 \times (B \cdot T \cdot d_{model})$<br>2 QKV投影：需要存输入X，即$B \cdot T \cdot d_{model}$。<br>3 $Q^\top K$ : 存 Q和K，$2 \times (B \cdot T \cdot d_{model})$。<br>4 softmax：梯度(p-y)，只用存p，$B \cdot num\_heads \cdot T \cdot T$。<br>5 value的加权和（P<em> V)：存p（已存）和V：$B \cdot T \cdot d_{model}$。<br>6 输出投影：存加权和的结果，$B \cdot T \cdot d_{model}$。<br>7 FFN：i 乘W1（W3）用到X，大小$B \cdot T \cdot d_{model}$。ii $Y_{inter} = \text{SiLU}(Y_1) \odot Y_3$ 用到Y1，Y3， $\text{SiLU}(Y_1)$， 大小$3 \times (B \cdot T \cdot d_{ff})$。   iii W2 </em> $Y_{inter}$ 用到$Y_{inter}$， 大小$B \cdot T \cdot d_{ff}$。<br>8 最终ln + 输出嵌入：$2 \cdot (BTd_{model}) = 2BTd_{model}$<br>9 交叉熵：存logits，大小$BT \cdot vocab\_size$  </p>
+<p>综上，相加，乘4bytes。得到：  $Memory_{peak} = 16N + L \cdot (96BTd_{model} + 4BhT^2) + 4BT(2d_{model} + vocab\_size)$ </p>
+<p>(b) 对于 GPT-2 XL ($d_{model}=1600, L=48, vocab=50257$):   $N \approx 2 \cdot (1600 \cdot 50257) + 48 \cdot 16 \cdot 1600^2 \approx 2.12 \times 10^9$。<br>静态内存16N = 33.92GB。最终层0.22GB。<br>transformer共12.8GB。因此80GB内存下，所求计算式为33.92 + batchsize * 12.8 。 batchsize ≤ [3.6] = 3  </p>
+<p>(c)  用ch3最后一问的结论，$F_{total} = 4.5 \text{ TFLOPs}$， 总 FLOPs 为 **$13.5 \text{ TFLOPs}$  </p>
+<p>(d) $400,000 \text{step} \times 1024 \text{ Batch} \times 13.5 \text{ TFLOPs/step} \approx 5.53 \times 10^{21} \text{ FLOPs}$。<br>$5.53 \times 10^{21} \div (9.75 \times 10^{12}) \div 86400 \approx$ 6564 天。<br> <br> <br> <br></p>
+<h2 id="4-4-学习率调度-scheduling"><a href="#4-4-学习率调度-scheduling" class="headerlink" title="4.4 学习率调度(scheduling)"></a>4.4 学习率调度(scheduling)</h2><p>导致损失下降最快的学习率值在训练过程中通常会发生变化。在训练 Transformer 时，典型做法是使用学习率调度，我们在开始时使用较大的学习率，进行较快的更新，并随着模型训练缓慢衰减到一个较小的值。在本作业中，我们将实现用于训练 LLaMA 的余弦退火。</p>
+<p>一个调度器仅仅是一个函数，它接收当前步长 $t$ 和其他相关参数（如初始和最终学习率），并返回梯度更新在步骤 $t$ 使用的学习率。最简单的调度是常数函数。</p>
+<p>余弦退火学习率调度接收: (i) 当前迭代 $t$，(ii) 最大学习率 $\alpha_{\max}$，(iii) 最小（最终）学习率 $\alpha_{\min}$，(iv) 预热迭代次数 $T_w$，以及 (v) 余弦退火迭代次数 $T_c$。迭代 $t$ 的学习率定义为：</p>
+<p>(预热) 如果 $t &lt; T_w$，则 $\alpha_t = \frac{t}{T_w} \alpha_{\max}$。</p>
+<p>(余弦退火) 如果 $T_w \le t \le T_c$，则 $\alpha_t = \alpha_{\min} + \frac{1}{2} \left( 1 + \cos \left( \frac{t-T_w}{T_c-T_w} \pi \right) \right) (\alpha_{\max} - \alpha_{\min})$。</p>
+<p>(后退火) 如果 $t &gt; T_c$，则 $\alpha_t = \alpha_{\min}$。</p>
+<h3 id="Problem-learning-rate-schedule-实现带预热的余弦学习率调度"><a href="#Problem-learning-rate-schedule-实现带预热的余弦学习率调度" class="headerlink" title="Problem (learning_rate_schedule): 实现带预热的余弦学习率调度"></a>Problem (learning_rate_schedule): 实现带预热的余弦学习率调度</h3><p>编写一个函数，接收 $t, \alpha_{\max}, \alpha_{\min}, T_w$ 和 $T_c$，并根据上面定义的调度器返回学习率 $\alpha_t$。然后实现 [adapters.get_lr_cosine_schedule] 并确保它通过 uv run pytest -k test_get_lr_cosine_schedule。</p>
+<h4 id="Answer：-3"><a href="#Answer：-3" class="headerlink" title="Answer："></a>Answer：</h4><p>见transformer_training.lr_cosine_schedule和adapter.run_get_lr_cosine_schedule。<br><br> <br> <br></p>
+<h2 id="4-5-梯度裁剪"><a href="#4-5-梯度裁剪" class="headerlink" title="4.5 梯度裁剪"></a>4.5 梯度裁剪</h2><p>在训练期间，我们有时会遇到产生巨大梯度的训练样本，这可能会使训练不稳定。为了缓解这种情况，实践中经常采用的一种技术是梯度裁剪。这个想法是在每轮反向传播之后、采取优化器步骤之前，对梯度的范数实施限制。</p>
+<p>给定梯度（针对所有参数） $g$，我们计算其 $\ell_2$-范数 $|g|_2$。如果该范数小于最大值 $M$，则保持 $g$ 不变；否则，我们将 $g$ 按比例 $\frac{M}{|g|_2+\epsilon}$ 缩小（其中添加了一个微小的 $\epsilon$，如 $10^{-6}$，以保证数值稳定性）。注意，结果范数将略低于 $M$。</p>
+<h3 id="Problem-gradient-clipping-实现梯度裁剪-1-point"><a href="#Problem-gradient-clipping-实现梯度裁剪-1-point" class="headerlink" title="Problem (gradient_clipping): 实现梯度裁剪 (1 point)"></a>Problem (gradient_clipping): 实现梯度裁剪 (1 point)</h3><p>编写一个实现梯度裁剪的函数。你的函数应接收参数列表和最大 $\ell_2$-范数。它应就地修改每个参数的梯度。使用 $\epsilon = 10^{-6}$（PyTorch 默认值）。然后，实现适配器 [adapters.run_gradient_clipping] 并确保它通过 uv run pytest -k test_gradient_clipping。</p>
+<h4 id="Answer：-4"><a href="#Answer：-4" class="headerlink" title="Answer："></a>Answer：</h4><p>见transformer_training.gradient_clipping和adapter.run_gradient_clipping。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/" rel="tag"># 机器学习</a>
+              <a href="/tags/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/" rel="tag"># 深度学习</a>
+              <a href="/tags/cs336/" rel="tag"># cs336</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/Assignment1-basics-chapter3/" rel="prev" title="cs336：Assignment1-basics-chapter3">
+                  <i class="fa fa-angle-left"></i> cs336：Assignment1-basics-chapter3
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/Assignment1-basics-chapter5/" rel="next" title="cs336：Assignment1-basics-chapter5">
+                  cs336：Assignment1-basics-chapter5 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">Zian Wang</span>
+  </div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+      <span>Word count total: </span>
+    <span title="Word count total">81k</span>
+  </span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="Total Visitors">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="Total Views">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="Back to top">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+<script src="/live2d-widget/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2d-widget/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"debug":false,"model":{"jsonPath":"/live2d-widget/assets/hijiki.model.json"},"display":{"position":"right","width":150,"height":200,"hOffset":20,"vOffset":0},"mobile":{"show":false},"react":{"opacityDefault":0.5,"opacityOnHover":1},"log":false});</script></body>
+
+</html>
