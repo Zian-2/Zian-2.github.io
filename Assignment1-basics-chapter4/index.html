@@ -30,7 +30,7 @@
 <meta property="og:description" content="4 Training a Transformer我们现在已经有了预处理数据（通过分词器）和模型（Transformer）的步骤。剩下的工作是构建支持训练的所有代码。这由以下部分组成： • 损失函数：我们需要定义损失函数（交叉熵）。• 优化器：我们需要定义优化器来最小化这个损失（AdamW）。• 训练循环：我们需要所有支持性的基础设施，用于加载数据、保存检查点并管理训练。   4.1 交叉熵损失回想">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2026-01-26T12:15:01.000Z">
-<meta property="article:modified_time" content="2026-02-18T09:49:25.475Z">
+<meta property="article:modified_time" content="2026-02-18T11:22:26.095Z">
 <meta property="article:author" content="Zian Wang">
 <meta property="article:tag" content="机器学习">
 <meta property="article:tag" content="深度学习">
@@ -295,7 +295,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">Edited on</span>
-      <time title="Modified: 2026-02-18 17:49:25" itemprop="dateModified" datetime="2026-02-18T17:49:25+08:00">2026-02-18</time>
+      <time title="Modified: 2026-02-18 19:22:26" itemprop="dateModified" datetime="2026-02-18T19:22:26+08:00">2026-02-18</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -335,6 +335,7 @@
 <h2 id="4-1-交叉熵损失"><a href="#4-1-交叉熵损失" class="headerlink" title="4.1 交叉熵损失"></a>4.1 交叉熵损失</h2><p>回想一下，Transformer 语言模型为每个长度为 $m + 1$ 的序列 $x$ 以及 $i = 1, \dots, m$ 定义了一个分布 $p_\theta(x_{i+1} | x_{1:i})$。给定一个由长度为 $m$ 的序列组成的训练集 $D$，我们定义标准交叉熵（负对数似然）损失函数：</p>
 
 $$\ell(\theta; D) = \frac{1}{|D|m} \sum_{x \in D} \sum_{i=1}^{m} -\log p_\theta(x_{i+1} | x_{1:i}). \quad (16)$$
+<span id="more"></span>
 <p>（注意，Transformer 中的单次前向传递会产生所有 $i = 1, \dots, m$ 的 $p_\theta(x_{i+1} | x_{1:i})$。）</p>
 <p>特别地，Transformer 为每个位置 $i$ 计算逻辑值 $o_{i} \in \mathbb{R}^{\text{vocabsize}}$，其结果为：</p>
 
