@@ -159,133 +159,6 @@
       </tags>
   </entry>
   <entry>
-    <title>cs336：Assignment1-basics-chapter6</title>
-    <url>/Assignment1-basics-chapter6/</url>
-    <content><![CDATA[<h1 id="6-Generating-text"><a href="#6-Generating-text" class="headerlink" title="6 Generating text"></a>6 Generating text</h1><p>既然我们已经可以训练模型了，最后需要从模型中生成文本的能力。  </p>
-<p>语言模型接收长度为 sequence_length 的整数序列（可以是批处理的），并产生一个大小为 (sequence_length × vocab_size) 的矩阵，其中序列的每个元素都是预测该位置之后下一个词的概率分布。我们现在将编写几个函数，将其转化为新序列的采样方案。 </p>
-<p><strong>Softmax</strong>  按照标准惯例，语言模型的输出是最后一个线性层的输出（即 logits），因此我们必须通过在公式 10 中见过的 softmax 操作将其转化为归一化的概率。  </p>
-<p><strong>解码</strong>  为了从模型中生成文本（解码），我们将为模型提供一个前缀标记序列（即 prompt），并要求它产生一个在词表上的概率分布，以预测序列中的下一个词。然后，我们将从这个词表项的分布中进行采样，以确定下一个输出标记。</p>
-<p>具体来说，解码过程的一个步骤应该接收一个序列 $x_{1…t}$，并通过以下方程返回一个标记 $x_{t+1}$：</p>
-
-$$P(x_{t+1} = i | x_{1...t}) = \frac{\exp(v_i)}{\sum_j \exp(v_j)}$$
-
-$$v = TransformerLM(x_{1...t})_t \in \mathbb{R}^{vocab\_size}$$
-<span id="more"></span>
-<p>其中 TransformerLM 是我们的模型，它输入长度为 sequence_length 的序列并产生一个大小为 (sequence_length × vocab_size) 的矩阵，我们取该矩阵的最后一个元素，因为我们正在寻找第 t 个位置的下一个词预测。  </p>
-<p>通过反复从这些单步条件分布中采样（将我们之前生成的输出标记附加到下一个解码时间步的输入中），直到生成序列结束标记 &lt;|endoftext|&gt;（或达到用户指定的生成标记最大数量），这就给了我们一个基本的解码器。</p>
-<p><strong>解码技巧</strong>  我们将尝试使用小型模型，而小型模型有时会生成质量非常低的文本。两个简单的解码技巧可以帮助解决这些问题。首先，在温度缩放(temperature scaling)中，我们使用温度参数 τ 修改 softmax，新的 softmax 为：</p>
-
-$$softmax(v, \tau)_i = \frac{\exp(v_i/\tau)}{\sum_{j=1}^{|vocab\_size|} \exp(v_j/\tau)}$$
-<p>注意设置 τ → 0 会使 v 中最大的元素占据主导地位（相当于贪婪搜索），softmax 的输出变成集中在这个最大元素上的 one-hot 向量。 </p>
-<p>其次，另一个技巧是nucleus采样或 top-p 采样，我们通过截断低概率词来修改采样分布。设 q 为我们从大小为 (vocab_size) 的（经过温度缩放的）softmax 中得到的概率分布。使用超参数 p 的核采样根据以下方程生成下一个标记： </p>
-
-$$P(x_{t+1} = i | q) = \begin{cases} \frac{q_i}{\sum_{j \in V(p)} q_j} & \text{如果 } i \in V(p) \\ 0 & \text{否则} \end{cases}$$
-<p>其中 V(p) 是满足 $\sum_{j \in V(p)} q_j \geq p$ 的最小索引集合。你可以通过首先按大小对概率分布 q 进行排序，并选择最大的词表元素直到达到目标水平 p，从而轻松计算这个数值。  </p>
-<h2 id="Problem-decoding-3-分"><a href="#Problem-decoding-3-分" class="headerlink" title="Problem (decoding)  (3 分)"></a>Problem (decoding)  (3 分)</h2><p>实现一个从你的语言模型进行解码的函数。我们建议你支持以下功能：  </p>
-<p>为用户提供的提示词生成补全（即接收某些 x1…t 并进行采样补全，直到遇到 &lt;|endoftext|&gt; 标记）。  </p>
-<p>允许用户控制生成的最大标记数量。  </p>
-<p>给定所需的温度值，在采样前对预测的下一词分布应用 softmax 温度缩放。  </p>
-<p>给定用户指定的阈值，进行 Top-p 采样。</p>
-<h3 id="Answer："><a href="#Answer：" class="headerlink" title="Answer："></a>Answer：</h3><p>见transformer_generation.py</p>
-]]></content>
-      <categories>
-        <category>cs336</category>
-      </categories>
-      <tags>
-        <tag>机器学习</tag>
-        <tag>深度学习</tag>
-        <tag>cs336</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>cs336：Assignment1-basics-chapter4</title>
-    <url>/Assignment1-basics-chapter4/</url>
-    <content><![CDATA[<h1 id="4-Training-a-Transformer"><a href="#4-Training-a-Transformer" class="headerlink" title="4 Training a Transformer"></a>4 Training a Transformer</h1><p>我们现在已经有了预处理数据（通过分词器）和模型（Transformer）的步骤。剩下的工作是构建支持训练的所有代码。这由以下部分组成：</p>
-<p>• 损失函数：我们需要定义损失函数（交叉熵）。<br>• 优化器：我们需要定义优化器来最小化这个损失（AdamW）。<br>• 训练循环：我们需要所有支持性的基础设施，用于加载数据、保存检查点并管理训练。<br><br> <br> <br></p>
-<h2 id="4-1-交叉熵损失"><a href="#4-1-交叉熵损失" class="headerlink" title="4.1 交叉熵损失"></a>4.1 交叉熵损失</h2><p>回想一下，Transformer 语言模型为每个长度为 $m + 1$ 的序列 $x$ 以及 $i = 1, \dots, m$ 定义了一个分布 $p_\theta(x_{i+1} | x_{1:i})$。给定一个由长度为 $m$ 的序列组成的训练集 $D$，我们定义标准交叉熵（负对数似然）损失函数：</p>
-
-$$\ell(\theta; D) = \frac{1}{|D|m} \sum_{x \in D} \sum_{i=1}^{m} -\log p_\theta(x_{i+1} | x_{1:i}). \quad (16)$$
-<span id="more"></span>
-<p>（注意，Transformer 中的单次前向传递会产生所有 $i = 1, \dots, m$ 的 $p_\theta(x_{i+1} | x_{1:i})$。）</p>
-<p>特别地，Transformer 为每个位置 $i$ 计算逻辑值 $o_{i} \in \mathbb{R}^{\text{vocabsize}}$，其结果为：</p>
-
-$$p(x_{i+1} | x_{1:i}) = \text{softmax}(o_i)[x_{i+1}] = \frac{\exp(o_i[x_{i+1}])}{\sum_{a=1}^{\text{vocabsize}} \exp(o_i[a])}. \quad (17)$$
-<p>交叉熵损失通常是相对于逻辑值向量 $o_{i} \in \mathbb{R}^{\text{vocabsize}}$ 和目标 $x_{i+1}$ 定义的。</p>
-<p>实现交叉熵损失需要注意数值(溢出)问题，就像 softmax 的情况一样。</p>
-<h3 id="Problem-cross-entropy-实现交叉熵"><a href="#Problem-cross-entropy-实现交叉熵" class="headerlink" title="Problem (cross_entropy): 实现交叉熵"></a>Problem (cross_entropy): 实现交叉熵</h3><p>编写一个计算交叉熵损失的函数，该函数接收预测的逻辑值 ($o_{i}$) 和目标 ($x_{i+1}$)，并计算交叉熵 $\ell_i = -\log \text{softmax}(o_{i})[x_{i+1}]$。你的函数应该处理以下内容：</p>
-<p>• 为了数值稳定性，减去最大的元素。</p>
-<p>• 尽可能抵消 log 和 exp。</p>
-<p>• 处理任何额外的批次维度，并返回整个批次的平均值。与 3.3 节一样，我们假设类批次维度总是出现在词表大小维度之前。</p>
-<p>实现 [adapters.run_cross_entropy]，然后运行 uv run pytest -k test_cross_entropy 来测试。</p>
-<p><strong>困惑度（Perplexity）</strong>：交叉熵足以进行训练，但当我们评估模型时，我们也希望报告困惑度。对于长度为 $m$ 且遭受交叉熵损失 $\ell_1, \dots, \ell_m$ 的序列：</p>
-
-$$\text{perplexity} = \exp \left( \frac{1}{m} \sum_{i=1}^{m} \ell_i \right). \quad (18)$$
-<p>物理意义：困惑度可以被看作是模型在预测下一个词时，平均在多少个等概率的选项中做选择。$PP = 10$-&gt;模型相当于在 10 个词里犹豫。如果 $PP = |Vocab|$-&gt;模型相当于在随机选。</p>
-<h4 id="Answer-："><a href="#Answer-：" class="headerlink" title="Answer ："></a>Answer ：</h4><p>见transformer_training.cross_entropy和adapter.run_cross_entropy。</p>
-<p><br> <br> <br></p>
-<h2 id="4-2-SGD-优化器"><a href="#4-2-SGD-优化器" class="headerlink" title="4.2 SGD 优化器"></a>4.2 SGD 优化器</h2><p>现在我们有了损失函数，我们将开始探索优化器。最简单的基于梯度的优化器是随机梯度下降（SGD）。我们从随机初始化的参数 $\theta_0$ 开始。然后对于每一步 $t = 0, \dots, T-1$，我们执行以下更新：</p>
-
-$$\theta_{t+1} \leftarrow \theta_t - \alpha_t \nabla L(\theta_t; B_t), \quad (19)$$
-<p>其中 $B_t$ 是从数据集 $D$ 中采样的随机数据批次，学习率 $\alpha_t$ 和批次大小 $|B_t|$ 是超参数。</p>
-<h3 id="4-2-1-在-PyTorch-中实现-SGD"><a href="#4-2-1-在-PyTorch-中实现-SGD" class="headerlink" title="4.2.1 在 PyTorch 中实现 SGD"></a>4.2.1 在 PyTorch 中实现 SGD</h3><p>为了实现我们的优化器，我们将继承 PyTorch 的 <code>torch.optim.Optimizer</code> 类。一个优化器子类必须实现两个方法：</p>
-<p><code>def __init__(self, params, ...)</code> 应该初始化你的优化器。这里，<code>params</code> 将是要优化的参数集合（或参数组，以防用户想要对模型的不同部分使用不同的超参数，如学习率）。确保将 <code>params</code> 传递给基类的 <code>__init__</code> 方法，该方法将存储这些参数以供在 <code>step</code> 中使用。你可以根据优化器接收额外的参数（例如，学习率是一个常见的参数），并以字典的形式将它们传递给基类构造函数，其中键是你为这些参数选择的名称（字符串）。</p>
-<p><code>def step(self)</code> 应该对参数进行一次更新。在训练循环期间，这将在反向传播之后被调用，因此你可以访问上一个批次的梯度。此方法应遍历每个参数张量 <code>p</code> 并就地修改它们，即根据梯度 <code>p.grad</code>（如果存在）设置 <code>p.data</code>。</p>
-<p>PyTorch 优化器 API 有一些微妙之处，因此通过示例来解释更容易。为了使我们的示例更丰富，我们将实现 SGD 的一个略微变体，其中学习率在训练过程中衰减，从初始学习率 $\alpha$ 开始，随着时间的推移采取连续更小的步长：</p>
-
-$$\theta_{t+1} = \theta_t - \frac{\alpha}{\sqrt{t+1}} \nabla L(\theta_t; B_t) \quad (20)$$
-<p>让我们看看这个版本的 SGD 如何实现为 PyTorch 优化器：<br><figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> collections.abc <span class="keyword">import</span> <span class="type">Callable</span>, Iterable</span><br><span class="line"><span class="keyword">from</span> typing <span class="keyword">import</span> <span class="type">Optional</span></span><br><span class="line"><span class="keyword">import</span> torch</span><br><span class="line"><span class="keyword">import</span> math</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">SGD</span>(torch.optim.Optimizer):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, params, lr=<span class="number">1e-3</span></span>):</span><br><span class="line">        <span class="keyword">if</span> lr &lt; <span class="number">0</span>:</span><br><span class="line">            <span class="keyword">raise</span> ValueError(<span class="string">f&quot;Invalid learning rate: <span class="subst">&#123;lr&#125;</span>&quot;</span>)</span><br><span class="line">        defaults = &#123;<span class="string">&quot;lr&quot;</span>: lr&#125;</span><br><span class="line">        <span class="built_in">super</span>().__init__(params, defaults)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">step</span>(<span class="params">self, closure: <span class="type">Optional</span>[<span class="type">Callable</span>] = <span class="literal">None</span></span>):</span><br><span class="line">        loss = <span class="literal">None</span> <span class="keyword">if</span> closure <span class="keyword">is</span> <span class="literal">None</span> <span class="keyword">else</span> closure()</span><br><span class="line">        <span class="keyword">for</span> group <span class="keyword">in</span> <span class="variable language_">self</span>.param_groups:</span><br><span class="line">            lr = group[<span class="string">&quot;lr&quot;</span>] <span class="comment"># 获取学习率。</span></span><br><span class="line">            <span class="keyword">for</span> p <span class="keyword">in</span> group[<span class="string">&quot;params&quot;</span>]:</span><br><span class="line">                <span class="keyword">if</span> p.grad <span class="keyword">is</span> <span class="literal">None</span>:</span><br><span class="line">                    <span class="keyword">continue</span></span><br><span class="line">                state = <span class="variable language_">self</span>.state[p] <span class="comment"># 获取与 p 相关的状态。</span></span><br><span class="line">                t = state.get(<span class="string">&quot;t&quot;</span>, <span class="number">0</span>) <span class="comment"># 从状态中获取迭代次数，或初始值。</span></span><br><span class="line">                grad = p.grad.data <span class="comment"># 获取损失相对于 p 的梯度。</span></span><br><span class="line">                p.data -= lr / math.sqrt(t + <span class="number">1</span>) * grad <span class="comment"># 就地更新权重张量。</span></span><br><span class="line">                state[<span class="string">&quot;t&quot;</span>] = t + <span class="number">1</span> <span class="comment"># 增加迭代次数。</span></span><br><span class="line">        <span class="keyword">return</span> loss</span><br></pre></td></tr></table></figure></p>
-<p>在 <code>__init__</code> 中，我们将参数以及默认超参数传递给基类构造函数。在 <code>step</code> 中，我们遍历每个参数组，然后遍历该组中的每个参数，并应用公式 20。在这里，我们将迭代次数保留为与每个参数相关的状态：我们首先读取该值，在梯度更新中使用它，然后更新它。API 规定用户可以传入一个可调用的 closure 来在优化器步骤之前重新计算损失。我们不需要这个，但我们添加它以符合 API。</p>
-<p>我们可以使用以下极简的训练循环示例来查看其运行情况：</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">weights = torch.nn.Parameter(<span class="number">5</span> * torch.randn((<span class="number">10</span>, <span class="number">10</span>)))</span><br><span class="line">opt = SGD([weights], lr=<span class="number">1</span>)</span><br><span class="line"><span class="keyword">for</span> t <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">100</span>):</span><br><span class="line">    opt.zero_grad() <span class="comment"># 重置所有可学习参数的梯度。</span></span><br><span class="line">    loss = (weights**<span class="number">2</span>).mean() <span class="comment"># 计算标量损失值。</span></span><br><span class="line">    <span class="built_in">print</span>(loss.cpu().item())</span><br><span class="line">    loss.backward() <span class="comment"># 运行反向传播，计算梯度。</span></span><br><span class="line">    opt.step() <span class="comment"># 运行优化器步骤。</span></span><br></pre></td></tr></table></figure>
-<p>这是训练循环的典型结构：在每次迭代中，我们将计算损失并运行优化器的步骤。当训练语言模型时，我们的可学习参数将来自模型（在 PyTorch 中，<code>m.parameters()</code> 为我们提供此集合）。损失将在采样的批次数据上计算，但训练循环的基本结构将保持不变。</p>
-<h4 id="Problem-learning-rate-tuning-调整学习率-1-point"><a href="#Problem-learning-rate-tuning-调整学习率-1-point" class="headerlink" title="Problem (learning_rate_tuning): 调整学习率 (1 point)"></a>Problem (learning_rate_tuning): 调整学习率 (1 point)</h4><p>正如我们将看到的，影响训练最多的超参数之一是学习率。让我们在我们的玩具示例中实践一下。使用另外三个学习率值运行上述 SGD 示例：1e1、1e2 和 1e3，仅进行 10 次训练迭代。对于这些学习率中的每一个，损失会发生什么变化？它是衰减得更快、更慢，还是发散（即在训练过程中增加）？</p>
-<h5 id="Answer："><a href="#Answer：" class="headerlink" title="Answer："></a>Answer：</h5><p>如下，全都发散？<br><figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line"><span class="built_in">PS</span> D:\cs336_assignments_and_notes\assignment1<span class="literal">-basics</span>\cs336_basics&gt; uv run python lr_tuning_test.py</span><br><span class="line">===== Testing LR: <span class="number">10.0</span> =====</span><br><span class="line">Step <span class="number">0</span>: Loss = <span class="number">2.50</span>e+<span class="number">01</span></span><br><span class="line">Step <span class="number">1</span>: Loss = <span class="number">9.02</span>e+<span class="number">03</span></span><br><span class="line">Step <span class="number">2</span>: Loss = <span class="number">1.56</span>e+<span class="number">06</span></span><br><span class="line">Step <span class="number">3</span>: Loss = <span class="number">1.73</span>e+<span class="number">08</span></span><br><span class="line">Step <span class="number">4</span>: Loss = <span class="number">1.40</span>e+<span class="number">10</span></span><br><span class="line">Step <span class="number">5</span>: Loss = <span class="number">8.86</span>e+<span class="number">11</span></span><br><span class="line">Step <span class="number">6</span>: Loss = <span class="number">4.55</span>e+<span class="number">13</span></span><br><span class="line">Step <span class="number">7</span>: Loss = <span class="number">1.96</span>e+<span class="number">15</span></span><br><span class="line">Step <span class="number">8</span>: Loss = <span class="number">7.22</span>e+<span class="number">16</span></span><br><span class="line">Step <span class="number">9</span>: Loss = <span class="number">2.32</span>e+<span class="number">18</span></span><br><span class="line"></span><br><span class="line">===== Testing LR: <span class="number">100.0</span> =====</span><br><span class="line">Step <span class="number">0</span>: Loss = <span class="number">2.50</span>e+<span class="number">01</span></span><br><span class="line">Step <span class="number">1</span>: Loss = <span class="number">9.90</span>e+<span class="number">05</span></span><br><span class="line">Step <span class="number">2</span>: Loss = <span class="number">1.95</span>e+<span class="number">10</span></span><br><span class="line">Step <span class="number">3</span>: Loss = <span class="number">2.56</span>e+<span class="number">14</span></span><br><span class="line">Step <span class="number">4</span>: Loss = <span class="number">2.51</span>e+<span class="number">18</span></span><br><span class="line">Step <span class="number">5</span>: Loss = <span class="number">1.96</span>e+<span class="number">22</span></span><br><span class="line">Step <span class="number">6</span>: Loss = <span class="number">1.28</span>e+<span class="number">26</span></span><br><span class="line">Step <span class="number">7</span>: Loss = <span class="number">7.10</span>e+<span class="number">29</span></span><br><span class="line">Step <span class="number">8</span>: Loss = <span class="number">3.45</span>e+<span class="number">33</span></span><br><span class="line">Step <span class="number">9</span>: Loss = <span class="number">1.49</span>e+<span class="number">37</span></span><br><span class="line"></span><br><span class="line">===== Testing LR: <span class="number">1000.0</span> =====</span><br><span class="line">Step <span class="number">0</span>: Loss = <span class="number">2.50</span>e+<span class="number">01</span></span><br><span class="line">Step <span class="number">1</span>: Loss = <span class="number">9.99</span>e+<span class="number">07</span></span><br><span class="line">Step <span class="number">2</span>: Loss = <span class="number">2.00</span>e+<span class="number">14</span></span><br><span class="line">Step <span class="number">3</span>: Loss = <span class="number">2.66</span>e+<span class="number">20</span></span><br><span class="line">Step <span class="number">4</span>: Loss = <span class="number">2.65</span>e+<span class="number">26</span></span><br><span class="line">Step <span class="number">5</span>: Loss = <span class="number">2.12</span>e+<span class="number">32</span></span><br><span class="line">Step <span class="number">6</span>: Loss = <span class="number">1.41</span>e+<span class="number">38</span></span><br><span class="line">Step <span class="number">7</span>: Loss = inf</span><br><span class="line">Step <span class="number">8</span>: Loss = inf</span><br><span class="line">Step <span class="number">9</span>: Loss = inf</span><br></pre></td></tr></table></figure></p>
-<p><br> <br> <br></p>
-<h2 id="4-3-AdamW"><a href="#4-3-AdamW" class="headerlink" title="4.3 AdamW"></a>4.3 AdamW</h2><p>现代语言模型通常使用更复杂的优化器，而不是 SGD。最近使用的大多数优化器都是 Adam 优化器 [Kingma and Ba, 2015] 的衍生品。我们将使用 AdamW [Loshchilov and Hutter, 2019]，它在最近的工作中被广泛使用。AdamW 提出了一种对 Adam 的修改，通过添加权重衰减（在每次迭代中，我们将参数向 0 拉动）来改进正则化，其方式与梯度更新解耦。我们将按照 Loshchilov and Hutter [2019] 的算法 2 中描述的方式实现 AdamW。</p>
-<p>AdamW 是有状态的：对于每个参数，它都会跟踪其一阶和二阶矩的运行估计。因此，AdamW 使用额外的内存以换取更好的稳定性和收敛性。除了学习率 $\alpha$ 外，AdamW 还有一对控制矩估计更新的超参数 ($\beta_1, \beta_2$)，以及权重衰减率 $\lambda$。算法可以写成如下形式，其中 $\epsilon$ 是用于在二阶矩 $v$ 极其小时提高数值稳定性的微小值：</p>
-<h3 id="算法-AdamW-优化器"><a href="#算法-AdamW-优化器" class="headerlink" title="算法  AdamW 优化器"></a>算法  AdamW 优化器</h3><p>init($\theta$)（初始化可学习参数）<br>$m \leftarrow 0$（一阶矩向量的初始值；形状与 $\theta$ 相同）<br>$v \leftarrow 0$（二阶矩向量的初始值；形状与 $\theta$ 相同）<br>for $t = 1, \dots, T$   do<br>    采样数据批次 $B_t$<br>    $g \leftarrow \nabla_\theta \ell(\theta; B_t)$（计算当前步的损失梯度）<br>    $m \leftarrow \beta_1 m + (1 - \beta_1)g$（更新一阶矩估计）<br>    $v \leftarrow \beta_2 v + (1 - \beta_2)g^2$（更新二阶矩估计）<br>    $\alpha_t \leftarrow \alpha \frac{\sqrt{1-(\beta_2)^t}}{1-(\beta_1)^t}$（计算迭代 $t$ 的调整后的 $\alpha$）<br>    $\theta \leftarrow \theta - \alpha_t \frac{m}{\sqrt{v}+\epsilon}$（更新参数）<br>    $\theta \leftarrow \theta - \alpha \lambda \theta$（应用权重衰减）<br>end for</p>
-<p>注意 $t$ 从 1 开始。<br>你现在将实现这个优化器。</p>
-<h3 id="Problem-adamw-实现-AdamW-2-points"><a href="#Problem-adamw-实现-AdamW-2-points" class="headerlink" title="Problem (adamw): 实现 AdamW (2 points)"></a>Problem (adamw): 实现 AdamW (2 points)</h3><p>将 AdamW 优化器实现为 <code>torch.optim.Optimizer</code> 的子类。你的类应在 <code>__init__</code> 中接收学习率 $\alpha$，以及 $\beta$、$\epsilon$ 和 $\lambda$ 超参数。为了帮助你保持状态，基类 <code>Optimizer</code> 为你提供了一个字典 <code>self.state</code>，它将 <code>nn.Parameter</code> 对象映射到一个字典，该字典存储该参数所需的任何信息。实现 [adapters.get_adamw_cls] 并确保它通过 <code>uv run pytest -k test_adamw</code>。</p>
-<h4 id="Answer：-1"><a href="#Answer：-1" class="headerlink" title="Answer："></a>Answer：</h4><p>见transformer_training.AdamW 。</p>
-<h3 id="Problem-adamwAccounting-使用-AdamW-训练的资源核算-2-points"><a href="#Problem-adamwAccounting-使用-AdamW-训练的资源核算-2-points" class="headerlink" title="Problem (adamwAccounting): 使用 AdamW 训练的资源核算 (2 points)"></a>Problem (adamwAccounting): 使用 AdamW 训练的资源核算 (2 points)</h3><p>让我们计算运行 AdamW 需要多少内存和计算量。假设我们为每个张量使用 float32。</p>
-<p>(a) 运行 AdamW 需要多少峰值内存？根据参数、激活值、梯度和优化器状态（optimizer state）的内存使用情况分解你的答案。用 batch_size 和模型超参数 (vocab_size, context_length, num_layers, d_model, num_heads) 来表达你的答案。假设 $d_{ff} = 4 \times d_{model}$。</p>
-<p>为了简单起见，在计算激活值的内存使用时，仅考虑以下组件：</p>
-<p>• Transformer 块<br>    – RMSNorm(s)<br>    – 多头自注意力子层：QKV 投影、$Q^\top K$ 矩阵乘法、softmax、值的加权和、输出投影。<br>    – 逐位置前馈：$W_1$ 矩阵乘法、SiLU、$W_2$ 矩阵乘法</p>
-<p>• 最终 RMSNorm<br>• 输出嵌入<br>• 逻辑值上的交叉熵</p>
-<p>回答：参数、激活值、梯度和优化器状态以及总和的代数表达式。</p>
-<p>(b) 为 GPT-2 XL 形状的模型实例化你的答案，得到一个仅依赖于 batch_size 的表达式。在 80GB 内存范围内，你可以使用的最大批次大小是多少？</p>
-<p>回答：一个看起来像 $a \cdot \text{batchsize} + b$ 的数值表达式，以及代表最大批次大小的数字。</p>
-<p>(c) 运行 AdamW 的一个步骤需要多少个 FLOPs？</p>
-<p>(d) 模型 FLOPs 利用率 (MFU) 定义为观察到的吞吐量（每秒 token 数）与硬件理论峰值 FLOP 吞吐量的比值 [Chowdhery et al., 2022]。NVIDIA A100 GPU 对于 float32 操作的理论峰值为 19.5 teraFLOP/s。假设你能够获得 50% 的 MFU，在单台 A100 上训练 GPT-2 XL 400K 步且批次大小为 1024 需要多长时间？遵循 Kaplan et al. [2020] 和 Hoffmann et al. [2022]，假设反向传播的 FLOPs 是前向传播的两倍。</p>
-<p>回答：训练所需的天数及简要说明。</p>
-<h4 id="Answer：-2"><a href="#Answer：-2" class="headerlink" title="Answer："></a>Answer：</h4><p>(a)计算峰值内存<br>A. 静态：<br>设参数个数N。<br>内存里：参数N个，梯度N个，optimizer state2N个(m和v)<br>共4N。<br>又，由chapter3最后一问的结尾，有  $N \approx vocab\_size \cdot d_{model}+ num\_layers \cdot (12d_{model}^2) + vocab\_size \cdot d_{model}$<br>B. 动态：<br>1 每层2个ln：$2 \times (B \cdot T \cdot d_{model})$<br>2 QKV投影：需要存输入X，即$B \cdot T \cdot d_{model}$。<br>3 $Q^\top K$ : 存 Q和K，$2 \times (B \cdot T \cdot d_{model})$。<br>4 softmax：梯度(p-y)，只用存p，$B \cdot num\_heads \cdot T \cdot T$。<br>5 value的加权和（P<em> V)：存p（已存）和V：$B \cdot T \cdot d_{model}$。<br>6 输出投影：存加权和的结果，$B \cdot T \cdot d_{model}$。<br>7 FFN：i 乘W1（W3）用到X，大小$B \cdot T \cdot d_{model}$。ii $Y_{inter} = \text{SiLU}(Y_1) \odot Y_3$ 用到Y1，Y3， $\text{SiLU}(Y_1)$， 大小$3 \times (B \cdot T \cdot d_{ff})$。   iii W2 </em> $Y_{inter}$ 用到$Y_{inter}$， 大小$B \cdot T \cdot d_{ff}$。<br>8 最终ln + 输出嵌入：$2 \cdot (BTd_{model}) = 2BTd_{model}$<br>9 交叉熵：存logits，大小$BT \cdot vocab\_size$  </p>
-<p>综上，相加，乘4bytes。得到：  $Memory_{peak} = 16N + L \cdot (96BTd_{model} + 4BhT^2) + 4BT(2d_{model} + vocab\_size)$ </p>
-<p>(b) 对于 GPT-2 XL ($d_{model}=1600, L=48, vocab=50257$):   $N \approx 2 \cdot (1600 \cdot 50257) + 48 \cdot 16 \cdot 1600^2 \approx 2.12 \times 10^9$。<br>静态内存16N = 33.92GB。最终层0.22GB。<br>transformer共12.8GB。因此80GB内存下，所求计算式为33.92 + batchsize * 12.8 。 batchsize ≤ [3.6] = 3  </p>
-<p>(c)  用ch3最后一问的结论，$F_{total} = 4.5 \text{ TFLOPs}$， 总 FLOPs 为 **$13.5 \text{ TFLOPs}$  </p>
-<p>(d) $400,000 \text{step} \times 1024 \text{ Batch} \times 13.5 \text{ TFLOPs/step} \approx 5.53 \times 10^{21} \text{ FLOPs}$。<br>$5.53 \times 10^{21} \div (9.75 \times 10^{12}) \div 86400 \approx$ 6564 天。<br> <br> <br> <br></p>
-<h2 id="4-4-学习率调度-scheduling"><a href="#4-4-学习率调度-scheduling" class="headerlink" title="4.4 学习率调度(scheduling)"></a>4.4 学习率调度(scheduling)</h2><p>导致损失下降最快的学习率值在训练过程中通常会发生变化。在训练 Transformer 时，典型做法是使用学习率调度，我们在开始时使用较大的学习率，进行较快的更新，并随着模型训练缓慢衰减到一个较小的值。在本作业中，我们将实现用于训练 LLaMA 的余弦退火。</p>
-<p>一个调度器仅仅是一个函数，它接收当前步长 $t$ 和其他相关参数（如初始和最终学习率），并返回梯度更新在步骤 $t$ 使用的学习率。最简单的调度是常数函数。</p>
-<p>余弦退火学习率调度接收: (i) 当前迭代 $t$，(ii) 最大学习率 $\alpha_{\max}$，(iii) 最小（最终）学习率 $\alpha_{\min}$，(iv) 预热迭代次数 $T_w$，以及 (v) 余弦退火迭代次数 $T_c$。迭代 $t$ 的学习率定义为：</p>
-<p>(预热) 如果 $t &lt; T_w$，则 $\alpha_t = \frac{t}{T_w} \alpha_{\max}$。</p>
-<p>(余弦退火) 如果 $T_w \le t \le T_c$，则 $\alpha_t = \alpha_{\min} + \frac{1}{2} \left( 1 + \cos \left( \frac{t-T_w}{T_c-T_w} \pi \right) \right) (\alpha_{\max} - \alpha_{\min})$。</p>
-<p>(后退火) 如果 $t &gt; T_c$，则 $\alpha_t = \alpha_{\min}$。</p>
-<h3 id="Problem-learning-rate-schedule-实现带预热的余弦学习率调度"><a href="#Problem-learning-rate-schedule-实现带预热的余弦学习率调度" class="headerlink" title="Problem (learning_rate_schedule): 实现带预热的余弦学习率调度"></a>Problem (learning_rate_schedule): 实现带预热的余弦学习率调度</h3><p>编写一个函数，接收 $t, \alpha_{\max}, \alpha_{\min}, T_w$ 和 $T_c$，并根据上面定义的调度器返回学习率 $\alpha_t$。然后实现 [adapters.get_lr_cosine_schedule] 并确保它通过 uv run pytest -k test_get_lr_cosine_schedule。</p>
-<h4 id="Answer：-3"><a href="#Answer：-3" class="headerlink" title="Answer："></a>Answer：</h4><p>见transformer_training.lr_cosine_schedule和adapter.run_get_lr_cosine_schedule。<br><br> <br> <br></p>
-<h2 id="4-5-梯度裁剪"><a href="#4-5-梯度裁剪" class="headerlink" title="4.5 梯度裁剪"></a>4.5 梯度裁剪</h2><p>在训练期间，我们有时会遇到产生巨大梯度的训练样本，这可能会使训练不稳定。为了缓解这种情况，实践中经常采用的一种技术是梯度裁剪。这个想法是在每轮反向传播之后、采取优化器步骤之前，对梯度的范数实施限制。</p>
-<p>给定梯度（针对所有参数） $g$，我们计算其 $\ell_2$-范数 $|g|_2$。如果该范数小于最大值 $M$，则保持 $g$ 不变；否则，我们将 $g$ 按比例 $\frac{M}{|g|_2+\epsilon}$ 缩小（其中添加了一个微小的 $\epsilon$，如 $10^{-6}$，以保证数值稳定性）。注意，结果范数将略低于 $M$。</p>
-<h3 id="Problem-gradient-clipping-实现梯度裁剪-1-point"><a href="#Problem-gradient-clipping-实现梯度裁剪-1-point" class="headerlink" title="Problem (gradient_clipping): 实现梯度裁剪 (1 point)"></a>Problem (gradient_clipping): 实现梯度裁剪 (1 point)</h3><p>编写一个实现梯度裁剪的函数。你的函数应接收参数列表和最大 $\ell_2$-范数。它应就地修改每个参数的梯度。使用 $\epsilon = 10^{-6}$（PyTorch 默认值）。然后，实现适配器 [adapters.run_gradient_clipping] 并确保它通过 uv run pytest -k test_gradient_clipping。</p>
-<h4 id="Answer：-4"><a href="#Answer：-4" class="headerlink" title="Answer："></a>Answer：</h4><p>见transformer_training.gradient_clipping和adapter.run_gradient_clipping。</p>
-]]></content>
-      <categories>
-        <category>cs336</category>
-      </categories>
-      <tags>
-        <tag>机器学习</tag>
-        <tag>深度学习</tag>
-        <tag>cs336</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>cs336：Assignment1-basics-chapter3</title>
     <url>/Assignment1-basics-chapter3/</url>
     <content><![CDATA[<p>本章带你编写Transformer，并且最后带你简单算一遍内存和FLOPs，但不包括训练和生成（在4-6章）。</p>
@@ -483,6 +356,133 @@ $$y = x + MultiHeadSelfAttention(RMSNorm(x)) \quad (15)$$
 <p>(c) FFN最多。主要原因是这里d_ff是d_model四倍</p>
 <p>(d) 只考虑transformer：<br><figure class="highlight markdown"><table><tr><td class="code"><pre><span class="line">| 模型规格 (Model) | d<span class="emphasis">_model | 层数 | FFN % | Attention % | 投影层 % |</span></span><br><span class="line"><span class="emphasis">| :---            | :---:   |:---:| :---: | :---:       | :---:   |</span></span><br><span class="line"><span class="emphasis">| <span class="strong">**GPT-2 Small**</span> | 768     | 12  | 62.6% | 11.3%       | 26.1%   |</span></span><br><span class="line"><span class="emphasis">| <span class="strong">**GPT-2 Medium**</span>| 1024    | 24  | 65.1% | 8.8%        | 26.1%   |</span></span><br><span class="line"><span class="emphasis">| <span class="strong">**GPT-2 Large**</span> | 1280    | 36  | 67.3% | 7.2%        | 25.5%   |</span></span><br><span class="line"><span class="emphasis">| <span class="strong">**GPT-2 XL**</span>    | 1600    | 48  | 69.5% | 5.9%        | 24.6%   |</span></span><br></pre></td></tr></table></figure></p>
 <p>(e)<br>1 可计算出总FLOPs增大34倍。<br>2 由(b)可见，FFN和投影是关于T的(增大16倍)，attention是关于T^2的(增大256倍)，所以attention的占比会远比之前大。</p>
+]]></content>
+      <categories>
+        <category>cs336</category>
+      </categories>
+      <tags>
+        <tag>机器学习</tag>
+        <tag>深度学习</tag>
+        <tag>cs336</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>cs336：Assignment1-basics-chapter4</title>
+    <url>/Assignment1-basics-chapter4/</url>
+    <content><![CDATA[<h1 id="4-Training-a-Transformer"><a href="#4-Training-a-Transformer" class="headerlink" title="4 Training a Transformer"></a>4 Training a Transformer</h1><p>我们现在已经有了预处理数据（通过分词器）和模型（Transformer）的步骤。剩下的工作是构建支持训练的所有代码。这由以下部分组成：</p>
+<p>• 损失函数：我们需要定义损失函数（交叉熵）。<br>• 优化器：我们需要定义优化器来最小化这个损失（AdamW）。<br>• 训练循环：我们需要所有支持性的基础设施，用于加载数据、保存检查点并管理训练。<br><br> <br> <br></p>
+<h2 id="4-1-交叉熵损失"><a href="#4-1-交叉熵损失" class="headerlink" title="4.1 交叉熵损失"></a>4.1 交叉熵损失</h2><p>回想一下，Transformer 语言模型为每个长度为 $m + 1$ 的序列 $x$ 以及 $i = 1, \dots, m$ 定义了一个分布 $p_\theta(x_{i+1} | x_{1:i})$。给定一个由长度为 $m$ 的序列组成的训练集 $D$，我们定义标准交叉熵（负对数似然）损失函数：</p>
+
+$$\ell(\theta; D) = \frac{1}{|D|m} \sum_{x \in D} \sum_{i=1}^{m} -\log p_\theta(x_{i+1} | x_{1:i}). \quad (16)$$
+<span id="more"></span>
+<p>（注意，Transformer 中的单次前向传递会产生所有 $i = 1, \dots, m$ 的 $p_\theta(x_{i+1} | x_{1:i})$。）</p>
+<p>特别地，Transformer 为每个位置 $i$ 计算逻辑值 $o_{i} \in \mathbb{R}^{\text{vocabsize}}$，其结果为：</p>
+
+$$p(x_{i+1} | x_{1:i}) = \text{softmax}(o_i)[x_{i+1}] = \frac{\exp(o_i[x_{i+1}])}{\sum_{a=1}^{\text{vocabsize}} \exp(o_i[a])}. \quad (17)$$
+<p>交叉熵损失通常是相对于逻辑值向量 $o_{i} \in \mathbb{R}^{\text{vocabsize}}$ 和目标 $x_{i+1}$ 定义的。</p>
+<p>实现交叉熵损失需要注意数值(溢出)问题，就像 softmax 的情况一样。</p>
+<h3 id="Problem-cross-entropy-实现交叉熵"><a href="#Problem-cross-entropy-实现交叉熵" class="headerlink" title="Problem (cross_entropy): 实现交叉熵"></a>Problem (cross_entropy): 实现交叉熵</h3><p>编写一个计算交叉熵损失的函数，该函数接收预测的逻辑值 ($o_{i}$) 和目标 ($x_{i+1}$)，并计算交叉熵 $\ell_i = -\log \text{softmax}(o_{i})[x_{i+1}]$。你的函数应该处理以下内容：</p>
+<p>• 为了数值稳定性，减去最大的元素。</p>
+<p>• 尽可能抵消 log 和 exp。</p>
+<p>• 处理任何额外的批次维度，并返回整个批次的平均值。与 3.3 节一样，我们假设类批次维度总是出现在词表大小维度之前。</p>
+<p>实现 [adapters.run_cross_entropy]，然后运行 uv run pytest -k test_cross_entropy 来测试。</p>
+<p><strong>困惑度（Perplexity）</strong>：交叉熵足以进行训练，但当我们评估模型时，我们也希望报告困惑度。对于长度为 $m$ 且遭受交叉熵损失 $\ell_1, \dots, \ell_m$ 的序列：</p>
+
+$$\text{perplexity} = \exp \left( \frac{1}{m} \sum_{i=1}^{m} \ell_i \right). \quad (18)$$
+<p>物理意义：困惑度可以被看作是模型在预测下一个词时，平均在多少个等概率的选项中做选择。$PP = 10$-&gt;模型相当于在 10 个词里犹豫。如果 $PP = |Vocab|$-&gt;模型相当于在随机选。</p>
+<h4 id="Answer-："><a href="#Answer-：" class="headerlink" title="Answer ："></a>Answer ：</h4><p>见transformer_training.cross_entropy和adapter.run_cross_entropy。</p>
+<p><br> <br> <br></p>
+<h2 id="4-2-SGD-优化器"><a href="#4-2-SGD-优化器" class="headerlink" title="4.2 SGD 优化器"></a>4.2 SGD 优化器</h2><p>现在我们有了损失函数，我们将开始探索优化器。最简单的基于梯度的优化器是随机梯度下降（SGD）。我们从随机初始化的参数 $\theta_0$ 开始。然后对于每一步 $t = 0, \dots, T-1$，我们执行以下更新：</p>
+
+$$\theta_{t+1} \leftarrow \theta_t - \alpha_t \nabla L(\theta_t; B_t), \quad (19)$$
+<p>其中 $B_t$ 是从数据集 $D$ 中采样的随机数据批次，学习率 $\alpha_t$ 和批次大小 $|B_t|$ 是超参数。</p>
+<h3 id="4-2-1-在-PyTorch-中实现-SGD"><a href="#4-2-1-在-PyTorch-中实现-SGD" class="headerlink" title="4.2.1 在 PyTorch 中实现 SGD"></a>4.2.1 在 PyTorch 中实现 SGD</h3><p>为了实现我们的优化器，我们将继承 PyTorch 的 <code>torch.optim.Optimizer</code> 类。一个优化器子类必须实现两个方法：</p>
+<p><code>def __init__(self, params, ...)</code> 应该初始化你的优化器。这里，<code>params</code> 将是要优化的参数集合（或参数组，以防用户想要对模型的不同部分使用不同的超参数，如学习率）。确保将 <code>params</code> 传递给基类的 <code>__init__</code> 方法，该方法将存储这些参数以供在 <code>step</code> 中使用。你可以根据优化器接收额外的参数（例如，学习率是一个常见的参数），并以字典的形式将它们传递给基类构造函数，其中键是你为这些参数选择的名称（字符串）。</p>
+<p><code>def step(self)</code> 应该对参数进行一次更新。在训练循环期间，这将在反向传播之后被调用，因此你可以访问上一个批次的梯度。此方法应遍历每个参数张量 <code>p</code> 并就地修改它们，即根据梯度 <code>p.grad</code>（如果存在）设置 <code>p.data</code>。</p>
+<p>PyTorch 优化器 API 有一些微妙之处，因此通过示例来解释更容易。为了使我们的示例更丰富，我们将实现 SGD 的一个略微变体，其中学习率在训练过程中衰减，从初始学习率 $\alpha$ 开始，随着时间的推移采取连续更小的步长：</p>
+
+$$\theta_{t+1} = \theta_t - \frac{\alpha}{\sqrt{t+1}} \nabla L(\theta_t; B_t) \quad (20)$$
+<p>让我们看看这个版本的 SGD 如何实现为 PyTorch 优化器：<br><figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> collections.abc <span class="keyword">import</span> <span class="type">Callable</span>, Iterable</span><br><span class="line"><span class="keyword">from</span> typing <span class="keyword">import</span> <span class="type">Optional</span></span><br><span class="line"><span class="keyword">import</span> torch</span><br><span class="line"><span class="keyword">import</span> math</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">SGD</span>(torch.optim.Optimizer):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, params, lr=<span class="number">1e-3</span></span>):</span><br><span class="line">        <span class="keyword">if</span> lr &lt; <span class="number">0</span>:</span><br><span class="line">            <span class="keyword">raise</span> ValueError(<span class="string">f&quot;Invalid learning rate: <span class="subst">&#123;lr&#125;</span>&quot;</span>)</span><br><span class="line">        defaults = &#123;<span class="string">&quot;lr&quot;</span>: lr&#125;</span><br><span class="line">        <span class="built_in">super</span>().__init__(params, defaults)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">step</span>(<span class="params">self, closure: <span class="type">Optional</span>[<span class="type">Callable</span>] = <span class="literal">None</span></span>):</span><br><span class="line">        loss = <span class="literal">None</span> <span class="keyword">if</span> closure <span class="keyword">is</span> <span class="literal">None</span> <span class="keyword">else</span> closure()</span><br><span class="line">        <span class="keyword">for</span> group <span class="keyword">in</span> <span class="variable language_">self</span>.param_groups:</span><br><span class="line">            lr = group[<span class="string">&quot;lr&quot;</span>] <span class="comment"># 获取学习率。</span></span><br><span class="line">            <span class="keyword">for</span> p <span class="keyword">in</span> group[<span class="string">&quot;params&quot;</span>]:</span><br><span class="line">                <span class="keyword">if</span> p.grad <span class="keyword">is</span> <span class="literal">None</span>:</span><br><span class="line">                    <span class="keyword">continue</span></span><br><span class="line">                state = <span class="variable language_">self</span>.state[p] <span class="comment"># 获取与 p 相关的状态。</span></span><br><span class="line">                t = state.get(<span class="string">&quot;t&quot;</span>, <span class="number">0</span>) <span class="comment"># 从状态中获取迭代次数，或初始值。</span></span><br><span class="line">                grad = p.grad.data <span class="comment"># 获取损失相对于 p 的梯度。</span></span><br><span class="line">                p.data -= lr / math.sqrt(t + <span class="number">1</span>) * grad <span class="comment"># 就地更新权重张量。</span></span><br><span class="line">                state[<span class="string">&quot;t&quot;</span>] = t + <span class="number">1</span> <span class="comment"># 增加迭代次数。</span></span><br><span class="line">        <span class="keyword">return</span> loss</span><br></pre></td></tr></table></figure></p>
+<p>在 <code>__init__</code> 中，我们将参数以及默认超参数传递给基类构造函数。在 <code>step</code> 中，我们遍历每个参数组，然后遍历该组中的每个参数，并应用公式 20。在这里，我们将迭代次数保留为与每个参数相关的状态：我们首先读取该值，在梯度更新中使用它，然后更新它。API 规定用户可以传入一个可调用的 closure 来在优化器步骤之前重新计算损失。我们不需要这个，但我们添加它以符合 API。</p>
+<p>我们可以使用以下极简的训练循环示例来查看其运行情况：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">weights = torch.nn.Parameter(<span class="number">5</span> * torch.randn((<span class="number">10</span>, <span class="number">10</span>)))</span><br><span class="line">opt = SGD([weights], lr=<span class="number">1</span>)</span><br><span class="line"><span class="keyword">for</span> t <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">100</span>):</span><br><span class="line">    opt.zero_grad() <span class="comment"># 重置所有可学习参数的梯度。</span></span><br><span class="line">    loss = (weights**<span class="number">2</span>).mean() <span class="comment"># 计算标量损失值。</span></span><br><span class="line">    <span class="built_in">print</span>(loss.cpu().item())</span><br><span class="line">    loss.backward() <span class="comment"># 运行反向传播，计算梯度。</span></span><br><span class="line">    opt.step() <span class="comment"># 运行优化器步骤。</span></span><br></pre></td></tr></table></figure>
+<p>这是训练循环的典型结构：在每次迭代中，我们将计算损失并运行优化器的步骤。当训练语言模型时，我们的可学习参数将来自模型（在 PyTorch 中，<code>m.parameters()</code> 为我们提供此集合）。损失将在采样的批次数据上计算，但训练循环的基本结构将保持不变。</p>
+<h4 id="Problem-learning-rate-tuning-调整学习率-1-point"><a href="#Problem-learning-rate-tuning-调整学习率-1-point" class="headerlink" title="Problem (learning_rate_tuning): 调整学习率 (1 point)"></a>Problem (learning_rate_tuning): 调整学习率 (1 point)</h4><p>正如我们将看到的，影响训练最多的超参数之一是学习率。让我们在我们的玩具示例中实践一下。使用另外三个学习率值运行上述 SGD 示例：1e1、1e2 和 1e3，仅进行 10 次训练迭代。对于这些学习率中的每一个，损失会发生什么变化？它是衰减得更快、更慢，还是发散（即在训练过程中增加）？</p>
+<h5 id="Answer："><a href="#Answer：" class="headerlink" title="Answer："></a>Answer：</h5><p>如下，全都发散？<br><figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line"><span class="built_in">PS</span> D:\cs336_assignments_and_notes\assignment1<span class="literal">-basics</span>\cs336_basics&gt; uv run python lr_tuning_test.py</span><br><span class="line">===== Testing LR: <span class="number">10.0</span> =====</span><br><span class="line">Step <span class="number">0</span>: Loss = <span class="number">2.50</span>e+<span class="number">01</span></span><br><span class="line">Step <span class="number">1</span>: Loss = <span class="number">9.02</span>e+<span class="number">03</span></span><br><span class="line">Step <span class="number">2</span>: Loss = <span class="number">1.56</span>e+<span class="number">06</span></span><br><span class="line">Step <span class="number">3</span>: Loss = <span class="number">1.73</span>e+<span class="number">08</span></span><br><span class="line">Step <span class="number">4</span>: Loss = <span class="number">1.40</span>e+<span class="number">10</span></span><br><span class="line">Step <span class="number">5</span>: Loss = <span class="number">8.86</span>e+<span class="number">11</span></span><br><span class="line">Step <span class="number">6</span>: Loss = <span class="number">4.55</span>e+<span class="number">13</span></span><br><span class="line">Step <span class="number">7</span>: Loss = <span class="number">1.96</span>e+<span class="number">15</span></span><br><span class="line">Step <span class="number">8</span>: Loss = <span class="number">7.22</span>e+<span class="number">16</span></span><br><span class="line">Step <span class="number">9</span>: Loss = <span class="number">2.32</span>e+<span class="number">18</span></span><br><span class="line"></span><br><span class="line">===== Testing LR: <span class="number">100.0</span> =====</span><br><span class="line">Step <span class="number">0</span>: Loss = <span class="number">2.50</span>e+<span class="number">01</span></span><br><span class="line">Step <span class="number">1</span>: Loss = <span class="number">9.90</span>e+<span class="number">05</span></span><br><span class="line">Step <span class="number">2</span>: Loss = <span class="number">1.95</span>e+<span class="number">10</span></span><br><span class="line">Step <span class="number">3</span>: Loss = <span class="number">2.56</span>e+<span class="number">14</span></span><br><span class="line">Step <span class="number">4</span>: Loss = <span class="number">2.51</span>e+<span class="number">18</span></span><br><span class="line">Step <span class="number">5</span>: Loss = <span class="number">1.96</span>e+<span class="number">22</span></span><br><span class="line">Step <span class="number">6</span>: Loss = <span class="number">1.28</span>e+<span class="number">26</span></span><br><span class="line">Step <span class="number">7</span>: Loss = <span class="number">7.10</span>e+<span class="number">29</span></span><br><span class="line">Step <span class="number">8</span>: Loss = <span class="number">3.45</span>e+<span class="number">33</span></span><br><span class="line">Step <span class="number">9</span>: Loss = <span class="number">1.49</span>e+<span class="number">37</span></span><br><span class="line"></span><br><span class="line">===== Testing LR: <span class="number">1000.0</span> =====</span><br><span class="line">Step <span class="number">0</span>: Loss = <span class="number">2.50</span>e+<span class="number">01</span></span><br><span class="line">Step <span class="number">1</span>: Loss = <span class="number">9.99</span>e+<span class="number">07</span></span><br><span class="line">Step <span class="number">2</span>: Loss = <span class="number">2.00</span>e+<span class="number">14</span></span><br><span class="line">Step <span class="number">3</span>: Loss = <span class="number">2.66</span>e+<span class="number">20</span></span><br><span class="line">Step <span class="number">4</span>: Loss = <span class="number">2.65</span>e+<span class="number">26</span></span><br><span class="line">Step <span class="number">5</span>: Loss = <span class="number">2.12</span>e+<span class="number">32</span></span><br><span class="line">Step <span class="number">6</span>: Loss = <span class="number">1.41</span>e+<span class="number">38</span></span><br><span class="line">Step <span class="number">7</span>: Loss = inf</span><br><span class="line">Step <span class="number">8</span>: Loss = inf</span><br><span class="line">Step <span class="number">9</span>: Loss = inf</span><br></pre></td></tr></table></figure></p>
+<p><br> <br> <br></p>
+<h2 id="4-3-AdamW"><a href="#4-3-AdamW" class="headerlink" title="4.3 AdamW"></a>4.3 AdamW</h2><p>现代语言模型通常使用更复杂的优化器，而不是 SGD。最近使用的大多数优化器都是 Adam 优化器 [Kingma and Ba, 2015] 的衍生品。我们将使用 AdamW [Loshchilov and Hutter, 2019]，它在最近的工作中被广泛使用。AdamW 提出了一种对 Adam 的修改，通过添加权重衰减（在每次迭代中，我们将参数向 0 拉动）来改进正则化，其方式与梯度更新解耦。我们将按照 Loshchilov and Hutter [2019] 的算法 2 中描述的方式实现 AdamW。</p>
+<p>AdamW 是有状态的：对于每个参数，它都会跟踪其一阶和二阶矩的运行估计。因此，AdamW 使用额外的内存以换取更好的稳定性和收敛性。除了学习率 $\alpha$ 外，AdamW 还有一对控制矩估计更新的超参数 ($\beta_1, \beta_2$)，以及权重衰减率 $\lambda$。算法可以写成如下形式，其中 $\epsilon$ 是用于在二阶矩 $v$ 极其小时提高数值稳定性的微小值：</p>
+<h3 id="算法-AdamW-优化器"><a href="#算法-AdamW-优化器" class="headerlink" title="算法  AdamW 优化器"></a>算法  AdamW 优化器</h3><p>init($\theta$)（初始化可学习参数）<br>$m \leftarrow 0$（一阶矩向量的初始值；形状与 $\theta$ 相同）<br>$v \leftarrow 0$（二阶矩向量的初始值；形状与 $\theta$ 相同）<br>for $t = 1, \dots, T$   do<br>    采样数据批次 $B_t$<br>    $g \leftarrow \nabla_\theta \ell(\theta; B_t)$（计算当前步的损失梯度）<br>    $m \leftarrow \beta_1 m + (1 - \beta_1)g$（更新一阶矩估计）<br>    $v \leftarrow \beta_2 v + (1 - \beta_2)g^2$（更新二阶矩估计）<br>    $\alpha_t \leftarrow \alpha \frac{\sqrt{1-(\beta_2)^t}}{1-(\beta_1)^t}$（计算迭代 $t$ 的调整后的 $\alpha$）<br>    $\theta \leftarrow \theta - \alpha_t \frac{m}{\sqrt{v}+\epsilon}$（更新参数）<br>    $\theta \leftarrow \theta - \alpha \lambda \theta$（应用权重衰减）<br>end for</p>
+<p>注意 $t$ 从 1 开始。<br>你现在将实现这个优化器。</p>
+<h3 id="Problem-adamw-实现-AdamW-2-points"><a href="#Problem-adamw-实现-AdamW-2-points" class="headerlink" title="Problem (adamw): 实现 AdamW (2 points)"></a>Problem (adamw): 实现 AdamW (2 points)</h3><p>将 AdamW 优化器实现为 <code>torch.optim.Optimizer</code> 的子类。你的类应在 <code>__init__</code> 中接收学习率 $\alpha$，以及 $\beta$、$\epsilon$ 和 $\lambda$ 超参数。为了帮助你保持状态，基类 <code>Optimizer</code> 为你提供了一个字典 <code>self.state</code>，它将 <code>nn.Parameter</code> 对象映射到一个字典，该字典存储该参数所需的任何信息。实现 [adapters.get_adamw_cls] 并确保它通过 <code>uv run pytest -k test_adamw</code>。</p>
+<h4 id="Answer：-1"><a href="#Answer：-1" class="headerlink" title="Answer："></a>Answer：</h4><p>见transformer_training.AdamW 。</p>
+<h3 id="Problem-adamwAccounting-使用-AdamW-训练的资源核算-2-points"><a href="#Problem-adamwAccounting-使用-AdamW-训练的资源核算-2-points" class="headerlink" title="Problem (adamwAccounting): 使用 AdamW 训练的资源核算 (2 points)"></a>Problem (adamwAccounting): 使用 AdamW 训练的资源核算 (2 points)</h3><p>让我们计算运行 AdamW 需要多少内存和计算量。假设我们为每个张量使用 float32。</p>
+<p>(a) 运行 AdamW 需要多少峰值内存？根据参数、激活值、梯度和优化器状态（optimizer state）的内存使用情况分解你的答案。用 batch_size 和模型超参数 (vocab_size, context_length, num_layers, d_model, num_heads) 来表达你的答案。假设 $d_{ff} = 4 \times d_{model}$。</p>
+<p>为了简单起见，在计算激活值的内存使用时，仅考虑以下组件：</p>
+<p>• Transformer 块<br>    – RMSNorm(s)<br>    – 多头自注意力子层：QKV 投影、$Q^\top K$ 矩阵乘法、softmax、值的加权和、输出投影。<br>    – 逐位置前馈：$W_1$ 矩阵乘法、SiLU、$W_2$ 矩阵乘法</p>
+<p>• 最终 RMSNorm<br>• 输出嵌入<br>• 逻辑值上的交叉熵</p>
+<p>回答：参数、激活值、梯度和优化器状态以及总和的代数表达式。</p>
+<p>(b) 为 GPT-2 XL 形状的模型实例化你的答案，得到一个仅依赖于 batch_size 的表达式。在 80GB 内存范围内，你可以使用的最大批次大小是多少？</p>
+<p>回答：一个看起来像 $a \cdot \text{batchsize} + b$ 的数值表达式，以及代表最大批次大小的数字。</p>
+<p>(c) 运行 AdamW 的一个步骤需要多少个 FLOPs？</p>
+<p>(d) 模型 FLOPs 利用率 (MFU) 定义为观察到的吞吐量（每秒 token 数）与硬件理论峰值 FLOP 吞吐量的比值 [Chowdhery et al., 2022]。NVIDIA A100 GPU 对于 float32 操作的理论峰值为 19.5 teraFLOP/s。假设你能够获得 50% 的 MFU，在单台 A100 上训练 GPT-2 XL 400K 步且批次大小为 1024 需要多长时间？遵循 Kaplan et al. [2020] 和 Hoffmann et al. [2022]，假设反向传播的 FLOPs 是前向传播的两倍。</p>
+<p>回答：训练所需的天数及简要说明。</p>
+<h4 id="Answer：-2"><a href="#Answer：-2" class="headerlink" title="Answer："></a>Answer：</h4><p>(a)计算峰值内存<br>A. 静态：<br>设参数个数N。<br>内存里：参数N个，梯度N个，optimizer state2N个(m和v)<br>共4N。<br>又，由chapter3最后一问的结尾，有  $N \approx vocab\_size \cdot d_{model}+ num\_layers \cdot (12d_{model}^2) + vocab\_size \cdot d_{model}$<br>B. 动态：<br>1 每层2个ln：$2 \times (B \cdot T \cdot d_{model})$<br>2 QKV投影：需要存输入X，即$B \cdot T \cdot d_{model}$。<br>3 $Q^\top K$ : 存 Q和K，$2 \times (B \cdot T \cdot d_{model})$。<br>4 softmax：梯度(p-y)，只用存p，$B \cdot num\_heads \cdot T \cdot T$。<br>5 value的加权和（P<em> V)：存p（已存）和V：$B \cdot T \cdot d_{model}$。<br>6 输出投影：存加权和的结果，$B \cdot T \cdot d_{model}$。<br>7 FFN：i 乘W1（W3）用到X，大小$B \cdot T \cdot d_{model}$。ii $Y_{inter} = \text{SiLU}(Y_1) \odot Y_3$ 用到Y1，Y3， $\text{SiLU}(Y_1)$， 大小$3 \times (B \cdot T \cdot d_{ff})$。   iii W2 </em> $Y_{inter}$ 用到$Y_{inter}$， 大小$B \cdot T \cdot d_{ff}$。<br>8 最终ln + 输出嵌入：$2 \cdot (BTd_{model}) = 2BTd_{model}$<br>9 交叉熵：存logits，大小$BT \cdot vocab\_size$  </p>
+<p>综上，相加，乘4bytes。得到：  $Memory_{peak} = 16N + L \cdot (96BTd_{model} + 4BhT^2) + 4BT(2d_{model} + vocab\_size)$ </p>
+<p>(b) 对于 GPT-2 XL ($d_{model}=1600, L=48, vocab=50257$):   $N \approx 2 \cdot (1600 \cdot 50257) + 48 \cdot 16 \cdot 1600^2 \approx 2.12 \times 10^9$。<br>静态内存16N = 33.92GB。最终层0.22GB。<br>transformer共12.8GB。因此80GB内存下，所求计算式为33.92 + batchsize * 12.8 。 batchsize ≤ [3.6] = 3  </p>
+<p>(c)  用ch3最后一问的结论，$F_{total} = 4.5 \text{ TFLOPs}$， 总 FLOPs 为 **$13.5 \text{ TFLOPs}$  </p>
+<p>(d) $400,000 \text{step} \times 1024 \text{ Batch} \times 13.5 \text{ TFLOPs/step} \approx 5.53 \times 10^{21} \text{ FLOPs}$。<br>$5.53 \times 10^{21} \div (9.75 \times 10^{12}) \div 86400 \approx$ 6564 天。<br> <br> <br> <br></p>
+<h2 id="4-4-学习率调度-scheduling"><a href="#4-4-学习率调度-scheduling" class="headerlink" title="4.4 学习率调度(scheduling)"></a>4.4 学习率调度(scheduling)</h2><p>导致损失下降最快的学习率值在训练过程中通常会发生变化。在训练 Transformer 时，典型做法是使用学习率调度，我们在开始时使用较大的学习率，进行较快的更新，并随着模型训练缓慢衰减到一个较小的值。在本作业中，我们将实现用于训练 LLaMA 的余弦退火。</p>
+<p>一个调度器仅仅是一个函数，它接收当前步长 $t$ 和其他相关参数（如初始和最终学习率），并返回梯度更新在步骤 $t$ 使用的学习率。最简单的调度是常数函数。</p>
+<p>余弦退火学习率调度接收: (i) 当前迭代 $t$，(ii) 最大学习率 $\alpha_{\max}$，(iii) 最小（最终）学习率 $\alpha_{\min}$，(iv) 预热迭代次数 $T_w$，以及 (v) 余弦退火迭代次数 $T_c$。迭代 $t$ 的学习率定义为：</p>
+<p>(预热) 如果 $t &lt; T_w$，则 $\alpha_t = \frac{t}{T_w} \alpha_{\max}$。</p>
+<p>(余弦退火) 如果 $T_w \le t \le T_c$，则 $\alpha_t = \alpha_{\min} + \frac{1}{2} \left( 1 + \cos \left( \frac{t-T_w}{T_c-T_w} \pi \right) \right) (\alpha_{\max} - \alpha_{\min})$。</p>
+<p>(后退火) 如果 $t &gt; T_c$，则 $\alpha_t = \alpha_{\min}$。</p>
+<h3 id="Problem-learning-rate-schedule-实现带预热的余弦学习率调度"><a href="#Problem-learning-rate-schedule-实现带预热的余弦学习率调度" class="headerlink" title="Problem (learning_rate_schedule): 实现带预热的余弦学习率调度"></a>Problem (learning_rate_schedule): 实现带预热的余弦学习率调度</h3><p>编写一个函数，接收 $t, \alpha_{\max}, \alpha_{\min}, T_w$ 和 $T_c$，并根据上面定义的调度器返回学习率 $\alpha_t$。然后实现 [adapters.get_lr_cosine_schedule] 并确保它通过 uv run pytest -k test_get_lr_cosine_schedule。</p>
+<h4 id="Answer：-3"><a href="#Answer：-3" class="headerlink" title="Answer："></a>Answer：</h4><p>见transformer_training.lr_cosine_schedule和adapter.run_get_lr_cosine_schedule。<br><br> <br> <br></p>
+<h2 id="4-5-梯度裁剪"><a href="#4-5-梯度裁剪" class="headerlink" title="4.5 梯度裁剪"></a>4.5 梯度裁剪</h2><p>在训练期间，我们有时会遇到产生巨大梯度的训练样本，这可能会使训练不稳定。为了缓解这种情况，实践中经常采用的一种技术是梯度裁剪。这个想法是在每轮反向传播之后、采取优化器步骤之前，对梯度的范数实施限制。</p>
+<p>给定梯度（针对所有参数） $g$，我们计算其 $\ell_2$-范数 $|g|_2$。如果该范数小于最大值 $M$，则保持 $g$ 不变；否则，我们将 $g$ 按比例 $\frac{M}{|g|_2+\epsilon}$ 缩小（其中添加了一个微小的 $\epsilon$，如 $10^{-6}$，以保证数值稳定性）。注意，结果范数将略低于 $M$。</p>
+<h3 id="Problem-gradient-clipping-实现梯度裁剪-1-point"><a href="#Problem-gradient-clipping-实现梯度裁剪-1-point" class="headerlink" title="Problem (gradient_clipping): 实现梯度裁剪 (1 point)"></a>Problem (gradient_clipping): 实现梯度裁剪 (1 point)</h3><p>编写一个实现梯度裁剪的函数。你的函数应接收参数列表和最大 $\ell_2$-范数。它应就地修改每个参数的梯度。使用 $\epsilon = 10^{-6}$（PyTorch 默认值）。然后，实现适配器 [adapters.run_gradient_clipping] 并确保它通过 uv run pytest -k test_gradient_clipping。</p>
+<h4 id="Answer：-4"><a href="#Answer：-4" class="headerlink" title="Answer："></a>Answer：</h4><p>见transformer_training.gradient_clipping和adapter.run_gradient_clipping。</p>
+]]></content>
+      <categories>
+        <category>cs336</category>
+      </categories>
+      <tags>
+        <tag>机器学习</tag>
+        <tag>深度学习</tag>
+        <tag>cs336</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>cs336：Assignment1-basics-chapter6</title>
+    <url>/Assignment1-basics-chapter6/</url>
+    <content><![CDATA[<h1 id="6-Generating-text"><a href="#6-Generating-text" class="headerlink" title="6 Generating text"></a>6 Generating text</h1><p>既然我们已经可以训练模型了，最后需要从模型中生成文本的能力。  </p>
+<p>语言模型接收长度为 sequence_length 的整数序列（可以是批处理的），并产生一个大小为 (sequence_length × vocab_size) 的矩阵，其中序列的每个元素都是预测该位置之后下一个词的概率分布。我们现在将编写几个函数，将其转化为新序列的采样方案。 </p>
+<p><strong>Softmax</strong>  按照标准惯例，语言模型的输出是最后一个线性层的输出（即 logits），因此我们必须通过在公式 10 中见过的 softmax 操作将其转化为归一化的概率。  </p>
+<p><strong>解码</strong>  为了从模型中生成文本（解码），我们将为模型提供一个前缀标记序列（即 prompt），并要求它产生一个在词表上的概率分布，以预测序列中的下一个词。然后，我们将从这个词表项的分布中进行采样，以确定下一个输出标记。</p>
+<p>具体来说，解码过程的一个步骤应该接收一个序列 $x_{1…t}$，并通过以下方程返回一个标记 $x_{t+1}$：</p>
+
+$$P(x_{t+1} = i | x_{1...t}) = \frac{\exp(v_i)}{\sum_j \exp(v_j)}$$
+
+$$v = TransformerLM(x_{1...t})_t \in \mathbb{R}^{vocab\_size}$$
+<span id="more"></span>
+<p>其中 TransformerLM 是我们的模型，它输入长度为 sequence_length 的序列并产生一个大小为 (sequence_length × vocab_size) 的矩阵，我们取该矩阵的最后一个元素，因为我们正在寻找第 t 个位置的下一个词预测。  </p>
+<p>通过反复从这些单步条件分布中采样（将我们之前生成的输出标记附加到下一个解码时间步的输入中），直到生成序列结束标记 &lt;|endoftext|&gt;（或达到用户指定的生成标记最大数量），这就给了我们一个基本的解码器。</p>
+<p><strong>解码技巧</strong>  我们将尝试使用小型模型，而小型模型有时会生成质量非常低的文本。两个简单的解码技巧可以帮助解决这些问题。首先，在温度缩放(temperature scaling)中，我们使用温度参数 τ 修改 softmax，新的 softmax 为：</p>
+
+$$softmax(v, \tau)_i = \frac{\exp(v_i/\tau)}{\sum_{j=1}^{|vocab\_size|} \exp(v_j/\tau)}$$
+<p>注意设置 τ → 0 会使 v 中最大的元素占据主导地位（相当于贪婪搜索），softmax 的输出变成集中在这个最大元素上的 one-hot 向量。 </p>
+<p>其次，另一个技巧是nucleus采样或 top-p 采样，我们通过截断低概率词来修改采样分布。设 q 为我们从大小为 (vocab_size) 的（经过温度缩放的）softmax 中得到的概率分布。使用超参数 p 的核采样根据以下方程生成下一个标记： </p>
+
+$$P(x_{t+1} = i | q) = \begin{cases} \frac{q_i}{\sum_{j \in V(p)} q_j} & \text{如果 } i \in V(p) \\ 0 & \text{否则} \end{cases}$$
+<p>其中 V(p) 是满足 $\sum_{j \in V(p)} q_j \geq p$ 的最小索引集合。你可以通过首先按大小对概率分布 q 进行排序，并选择最大的词表元素直到达到目标水平 p，从而轻松计算这个数值。  </p>
+<h2 id="Problem-decoding-3-分"><a href="#Problem-decoding-3-分" class="headerlink" title="Problem (decoding)  (3 分)"></a>Problem (decoding)  (3 分)</h2><p>实现一个从你的语言模型进行解码的函数。我们建议你支持以下功能：  </p>
+<p>为用户提供的提示词生成补全（即接收某些 x1…t 并进行采样补全，直到遇到 &lt;|endoftext|&gt; 标记）。  </p>
+<p>允许用户控制生成的最大标记数量。  </p>
+<p>给定所需的温度值，在采样前对预测的下一词分布应用 softmax 温度缩放。  </p>
+<p>给定用户指定的阈值，进行 Top-p 采样。</p>
+<h3 id="Answer："><a href="#Answer：" class="headerlink" title="Answer："></a>Answer：</h3><p>见transformer_generation.py</p>
 ]]></content>
       <categories>
         <category>cs336</category>
